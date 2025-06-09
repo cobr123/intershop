@@ -1,0 +1,6 @@
+version: "3"
+services:
+  intershop:
+    build: . # https://github.com/cobr123/intershop.git
+    ports:
+      - '8080:8080'

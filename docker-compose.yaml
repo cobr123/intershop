@@ -1,6 +1,23 @@
 version: "3"
 services:
-  intershop:
+  db:
+    image: postgres:17-alpine
+    volumes:
+      - /var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=intershop
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+
+  web:
     build: . # https://github.com/cobr123/intershop.git
     ports:
       - '8080:8080'
+    depends_on:
+      - db
+    environment:
+      - DB_NAME=intershop
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - DB_HOST=db
+      - DB_PORT=5432

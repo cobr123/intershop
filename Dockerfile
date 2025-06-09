@@ -17,5 +17,5 @@ RUN mvn package -Dmaven.test.skip
 
 # Run the application (using the JRE, not the JDK)
 FROM amazoncorretto:21-alpine-jdk AS runtime
-COPY --from=build /build/target/intershop-1.0.0-SNAPSHOT.jar /app/intershop.jar
-CMD ["java", "-jar", "/app/intershop.jar"]
+COPY --from=build /build/target/*.jar app.jar
+CMD ["java", "-jar", "/app.jar"]

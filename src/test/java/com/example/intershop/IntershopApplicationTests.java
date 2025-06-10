@@ -1,13 +1,15 @@
 package com.example.intershop;
 
-import org.junit.jupiter.api.Test;
+import com.example.intershop.config.PostgreSqlTestContainer;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.context.ImportTestcontainers;
+import org.springframework.test.context.ActiveProfiles;
+import org.testcontainers.junit.jupiter.Testcontainers;
+
 
 @SpringBootTest
-class IntershopApplicationTests {
-
-	@Test
-	void contextLoads() {
-	}
-
+@Testcontainers
+@ImportTestcontainers(PostgreSqlTestContainer.class)
+@ActiveProfiles("test")
+public class IntershopApplicationTests {
 }

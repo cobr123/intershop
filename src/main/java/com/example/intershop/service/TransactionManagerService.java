@@ -25,18 +25,14 @@ public class TransactionManagerService {
     }
 
     public void transfer(Account source, Account target, BigDecimal amount) {
-        try {
-            transactionTemplate.executeWithoutResult(status -> {
-                // Увеличиваем баланс получателя и сохраняем
-                target.setBalance(target.getBalance().add(amount));
-                accountRepository.save(target);
+        transactionTemplate.executeWithoutResult(status -> {
+            // Увеличиваем баланс получателя и сохраняем
+            target.setBalance(target.getBalance().add(amount));
+            accountRepository.save(target);
 
-                // Уменьшаем баланс отправителя и сохраняем
-                source.setBalance(source.getBalance().subtract(amount));
-                accountRepository.save(source);
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            // Уменьшаем баланс отправителя и сохраняем
+            source.setBalance(source.getBalance().subtract(amount));
+            accountRepository.save(source);
+        });
     }
 }

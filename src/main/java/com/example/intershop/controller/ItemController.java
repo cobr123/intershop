@@ -25,7 +25,7 @@ public class ItemController {
             @RequestParam(required = false, defaultValue = "10", name = "pageSize") int pageSize,
             @RequestParam(required = false, defaultValue = "1", name = "pageNumber") int pageNumber
     ) {
-        Items items = service.findByTitleLikeOrDescriptionLike(search, ItemSort.valueOf(sort), pageSize, pageNumber);
+        Items items = service.findByTitleLikeOrDescriptionLike(search, ItemSort.valueOf(sort), pageSize, pageNumber, 3);
         model.addAttribute("search", search);
         model.addAttribute("sort", sort);
         model.addAttribute("items", items.items());
@@ -33,4 +33,6 @@ public class ItemController {
 
         return "main.html";
     }
+
+
 }

@@ -40,7 +40,7 @@ public class ItemRepositoryTest {
     @Test
     public void testFindByName() {
         var item = itemService.insert(new Item("title",1, BigDecimal.valueOf(2.5)));
-        var foundItems = itemService.findByTitleLikeOrDescriptionLike("tl", ItemSort.NO,10,1);
+        var foundItems = itemService.findByTitleLikeOrDescriptionLike("tl", ItemSort.NO,10,1, 3);
 
         assertThat(item)
                 .isNotNull()
@@ -48,9 +48,9 @@ public class ItemRepositoryTest {
                 .extracting(Item::getId)
                 .isNotNull();
 
-        assertThat(foundItems.items()).isNotEmpty();
         assertThat(foundItems.items().size()).isEqualTo(1);
-        assertThat(foundItems.items().get(0).getId()).isEqualTo(item.getId());
+        assertThat(foundItems.items().get(0).size()).isEqualTo(1);
+        assertThat(foundItems.items().get(0).get(0).getId()).isEqualTo(item.getId());
         assertThat(foundItems.paging().hasNext()).isEqualTo(false);
         assertThat(foundItems.paging().hasPrevious()).isEqualTo(false);
     }

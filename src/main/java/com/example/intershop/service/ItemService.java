@@ -5,9 +5,10 @@ import com.example.intershop.model.ItemSort;
 import com.example.intershop.model.Items;
 import com.example.intershop.model.Paging;
 import com.example.intershop.repository.ItemRepository;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -24,22 +25,22 @@ public class ItemService {
         return repository.findById(id);
     }
 
-    public Items findByTitleLikeOrDescriptionLike(String search, ItemSort itemSort, int pageSize, int pageNumber) {
+    public Items findByTitleLikeOrDescriptionLike(String search, ItemSort itemSort, int pageSize, int pageNumber, int lineSize) {
         if (search.isBlank()) {
-            return findAll(itemSort, pageSize, pageNumber);
+            return findAll(itemSort, pageSize, pageNumber, lineSize);
         } else {
             var pageable = itemSort.toPageable(pageSize, pageNumber);
             var page = repository.findByTitleLikeOrDescriptionLike("%" + search + "%", search, pageable);
             var paging = new Paging(pageNumber, pageSize, page.hasNext(), page.hasPrevious());
-            return new Items(page.stream().toList(), paging);
+            return new Items(grouped(page.stream().toList(), lineSize), paging);
         }
     }
 
-    public Items findAll(ItemSort itemSort, int pageSize, int pageNumber) {
+    public Items findAll(ItemSort itemSort, int pageSize, int pageNumber, int lineSize) {
         var pageable = itemSort.toPageable(pageSize, pageNumber);
         var page = repository.findAll(pageable);
         var paging = new Paging(pageNumber, pageSize, page.hasNext(), page.hasPrevious());
-        return new Items(page.stream().toList(), paging);
+        return new Items(grouped(page.stream().toList(), lineSize), paging);
     }
 
     public Item insert(Item item) {
@@ -52,6 +53,22 @@ public class ItemService {
 
     public void deleteById(Long id) {
         repository.deleteById(id);
+    }
+
+    public List<List<Item>> grouped(List<Item> list, int size) {
+        var result = new ArrayList<List<Item>>();
+        var acc = new ArrayList<Item>();
+        for (Item item : list) {
+            acc.add(item);
+            if (acc.size() >= size) {
+                result.add(acc);
+                acc = new ArrayList<>();
+            }
+        }
+        if (!acc.isEmpty()) {
+            result.add(acc);
+        }
+        return result;
     }
 
 }

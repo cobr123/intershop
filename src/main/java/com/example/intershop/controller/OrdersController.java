@@ -9,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +39,7 @@ public class OrdersController {
     }
 
     @GetMapping("/{id}")
-    public String getOrder(Model model, @PathVariable("id") Long orderId, @PathVariable(value = "newOrder", required = false) Boolean newOrder) {
+    public String getOrder(Model model, @PathVariable("id") Long orderId, @RequestParam(value = "newOrder", required = false, defaultValue = "false") Boolean newOrder) {
         Order order = orderService.findById(orderId).orElseThrow();
         var items = orderItemService.findByOrderId(order.getId());
         model.addAttribute("order", new OrderUi(order.getId(), items));

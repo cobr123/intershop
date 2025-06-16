@@ -1,47 +1,40 @@
 package com.example.intershop.controller;
 
-import org.junit.jupiter.api.BeforeEach;
+import com.example.intershop.IntershopApplicationTests;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(SpringExtension.class)
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(IntershopApplicationTests.class)
 public class ItemsControllerTest {
 
-    @MockitoBean
-    private ItemsController controller;
-
+    @Autowired
     private MockMvc mockMvc;
-
-    @BeforeEach
-    void setUp() {
-        InternalResourceViewResolver viewResolver = new InternalResourceViewResolver();
-        viewResolver.setPrefix("classpath:templates/");
-        viewResolver.setSuffix(".html");
-
-        mockMvc = MockMvcBuilders.standaloneSetup(controller)
-                .setViewResolvers(viewResolver)
-                .build();
-    }
 
     @Test
     public void testItemsList() throws Exception {
         mockMvc.perform(get("/items/1"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("text/html;charset=UTF-8"))
+                .andExpect(view().name("item"))
+                .andExpect(model().attributeExists("item"))
+                .andExpect(xpath("//div/p/img").exists());
     }
 
     @Test
     public void testItemsListAdd() throws Exception {
         mockMvc.perform(post("/items/1").param("action", "PLUS"))
-                .andExpect(status().isOk());
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/main/items/1"));
     }
 
 }

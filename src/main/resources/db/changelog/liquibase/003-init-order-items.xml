@@ -14,10 +14,10 @@
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="order_id" type="bigint">
-                <constraints nullable="false" foreignKeyName="fk_order_items_order_id" referencedTableName="orders" referencedColumnNames="id"/>
+                <constraints nullable="false" foreignKeyName="fk_order_items_order_id" referencedTableName="orders" referencedColumnNames="id" deleteCascade="false"/>
             </column>
             <column name="item_id" type="bigint">
-                <constraints nullable="false" foreignKeyName="fk_order_items_item_id" referencedTableName="items" referencedColumnNames="id"/>
+                <constraints nullable="false" foreignKeyName="fk_order_items_item_id" referencedTableName="items" referencedColumnNames="id" deleteCascade="false"/>
             </column>
             <column name="count" type="int">
                 <constraints nullable="false"/>

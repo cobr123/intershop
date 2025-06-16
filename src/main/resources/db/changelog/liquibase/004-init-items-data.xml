@@ -17,9 +17,13 @@
             INSERT INTO items (title, description, count, price) values ('title3', 'description3', 3, 103.3);
             INSERT INTO items (title, description, count, price) values ('title4', 'description4', 4, 104.4);
             INSERT INTO items (title, description, count, price) values ('title5', 'description5', 5, 105.5);
+            INSERT INTO orders (status) values ('GATHERING');
+            INSERT INTO order_items (order_id, item_id, count) values (1, 1, 1);
         </sql>
         <rollback>
             <sql>
+                TRUNCATE TABLE order_items;
+                TRUNCATE TABLE orders;
                 TRUNCATE TABLE items;
             </sql>
         </rollback>

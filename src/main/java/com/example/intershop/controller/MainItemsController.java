@@ -44,7 +44,7 @@ public class MainItemsController {
         Order order = orderService.findNewOrder();
         orderItemService.update(order.getId(), itemId, action);
 
-        return "redirect:/cart/items";
+        return "redirect:/main/items";
     }
 
 }

@@ -6,7 +6,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
     <changeSet id="3" author="roman">
-        <preConditions onFail="MARK_RAN">
+        <preConditions onFail="WARN">
             <tableExists tableName="order_items"/>
         </preConditions>
         <createTable tableName="order_items">

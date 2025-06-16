@@ -38,7 +38,7 @@ public class OrdersController {
     }
 
     @GetMapping("/{id}")
-    public String getOrder(Model model, @PathVariable("id") Long orderId, @PathVariable("newOrder") Boolean newOrder) {
+    public String getOrder(Model model, @PathVariable("id") Long orderId, @PathVariable(value = "newOrder", required = false) Boolean newOrder) {
         Order order = orderService.findById(orderId).orElseThrow();
         var items = orderItemService.findByOrderId(order.getId());
         model.addAttribute("order", new OrderUi(order.getId(), items));

@@ -5,6 +5,8 @@ import com.example.intershop.model.OrderStatus;
 import com.example.intershop.repository.OrderRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class OrderService {
 
@@ -17,6 +19,14 @@ public class OrderService {
     public Order findNewOrder() {
         return repository.findByStatus(OrderStatus.NEW)
                 .orElseGet(() -> insert(new Order(OrderStatus.NEW)));
+    }
+
+    public Iterable<Order> findAll() {
+        return repository.findAll();
+    }
+
+    public Optional<Order> findById(Long id) {
+        return repository.findById(id);
     }
 
     public Order insert(Order order) {

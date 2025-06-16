@@ -33,7 +33,7 @@ public class MainItemsController {
         return "cart.html";
     }
 
-    @PostMapping(value = "/{id}")
+    @PostMapping("/{id}")
     public String update(@PathVariable("id") Long itemId, @PathVariable("action") ItemAction action) {
         Order order = orderService.findNewOrder();
         orderItemService.update(order.getId(), itemId, action);

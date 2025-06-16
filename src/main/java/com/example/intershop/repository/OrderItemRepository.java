@@ -14,6 +14,6 @@ import java.util.Optional;
 public interface OrderItemRepository extends CrudRepository<OrderItem, Long> {
     Optional<OrderItem> findByOrderIdAndItemId(Long orderId, Long itemId);
 
-    @Query(value = "select items.* from items, order_items where items.order_id = :orderId and items.id = order_items.item_id")
+    @Query("select items.* from items, order_items where items.order_id = :orderId and items.id = order_items.item_id")
     List<Item> findByOrderId(@Param("orderId") Long orderId);
 }

@@ -24,7 +24,7 @@ public class ItemsController {
         this.orderItemService = orderItemService;
     }
 
-    @GetMapping(value = "/{id}")
+    @GetMapping("/{id}")
     public String getItem(Model model, @PathVariable("id") Long itemId) {
         Item item = itemService.findById(itemId).orElseThrow();
         model.addAttribute("item", item);
@@ -32,7 +32,7 @@ public class ItemsController {
         return "item";
     }
 
-    @PostMapping(value = "/{id}")
+    @PostMapping("/{id}")
     public String update(@PathVariable("id") Long itemId, @PathVariable("action") ItemAction action) {
         Order order = orderService.findNewOrder();
         orderItemService.update(order.getId(), itemId, action);

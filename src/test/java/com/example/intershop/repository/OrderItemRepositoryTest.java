@@ -71,6 +71,18 @@ public class OrderItemRepositoryTest {
     }
 
     @Test
+    public void testFindByOrderId() {
+        var item = itemService.insert(new Item("title", 1, BigDecimal.valueOf(2.5)));
+        var order = orderService.findNewOrder();
+        var orderItem = orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1));
+
+        var orderItems = orderItemService.findByOrderId(order.getId());
+
+        assertThat(orderItems.size()).isEqualTo(1);
+        assertThat(orderItems.get(0).getId()).isEqualTo(orderItem.getItemId());
+    }
+
+    @Test
     public void testDelete() {
         var item = itemService.insert(new Item("title", 1, BigDecimal.valueOf(2.5)));
         var order = orderService.findNewOrder();

@@ -34,7 +34,7 @@ public class OrdersController {
         }
         model.addAttribute("orders", orders);
 
-        return "orders.html";
+        return "orders";
     }
 
     @GetMapping("/{id}")
@@ -44,7 +44,7 @@ public class OrdersController {
         model.addAttribute("order", new OrderUi(order.getId(), items));
         model.addAttribute("newOrder", newOrder);
 
-        return "orders.html";
+        return "orders";
     }
 
 }

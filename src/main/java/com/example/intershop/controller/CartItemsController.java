@@ -39,7 +39,7 @@ public class CartItemsController {
         model.addAttribute("items", items.items());
         model.addAttribute("paging", items.paging());
 
-        return "main.html";
+        return "main";
     }
 
     @PostMapping("/{id}")

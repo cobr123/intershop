@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Controller
-@RequestMapping("/cart/items")
+@RequestMapping("/main/items")
 public class MainItemsController {
 
     private final OrderService orderService;
@@ -30,7 +30,7 @@ public class MainItemsController {
         model.addAttribute("total", items.stream().map(Item::getPrice).reduce(BigDecimal::add).orElse(BigDecimal.ZERO));
         model.addAttribute("empty", items.isEmpty());
 
-        return "cart.html";
+        return "cart";
     }
 
     @PostMapping("/{id}")

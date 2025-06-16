@@ -5,7 +5,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-    <changeSet id="3" author="roman">
+    <changeSet id="init_order_items" author="roman">
         <preConditions onFail="WARN">
             <tableExists tableName="order_items"/>
         </preConditions>

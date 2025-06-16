@@ -13,6 +13,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,7 +31,7 @@ public class ItemRepositoryTest {
 
     @Test
     public void testCreate() {
-        var item = itemService.insert(new Item("title",1, BigDecimal.valueOf(2.5)));
+        var item = itemService.insert(new Item("title", 1, BigDecimal.valueOf(2.5)));
 
         assertThat(item)
                 .isNotNull()
@@ -41,8 +42,9 @@ public class ItemRepositoryTest {
 
     @Test
     public void testFindByName() {
-        var item = itemService.insert(new Item("title",1, BigDecimal.valueOf(2.5)));
-        var foundItems = itemService.findByTitleLikeOrDescriptionLike("tl", ItemSort.NO,10,1, 3);
+        var title = UUID.randomUUID().toString();
+        var item = itemService.insert(new Item("123" + title + "456", 1, BigDecimal.valueOf(2.5)));
+        var foundItems = itemService.findByTitleLikeOrDescriptionLike(title, ItemSort.NO, 10, 1, 3);
 
         assertThat(item)
                 .isNotNull()
@@ -59,7 +61,7 @@ public class ItemRepositoryTest {
 
     @Test
     public void testDelete() {
-        var item = itemService.insert(new Item("title",1, BigDecimal.valueOf(2.5)));
+        var item = itemService.insert(new Item("title", 1, BigDecimal.valueOf(2.5)));
         itemService.deleteById(item.getId());
 
         assertThat(itemRepository.existsById(item.getId()))

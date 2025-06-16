@@ -23,6 +23,10 @@ public class OrderService {
         return repository.save(order);
     }
 
+    public Order update(Order order) {
+        return repository.save(order);
+    }
+
     public void deleteById(Long id) {
         repository.deleteById(id);
     }

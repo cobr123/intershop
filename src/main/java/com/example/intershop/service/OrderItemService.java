@@ -1,10 +1,12 @@
 package com.example.intershop.service;
 
+import com.example.intershop.model.Item;
 import com.example.intershop.model.ItemAction;
 import com.example.intershop.model.OrderItem;
 import com.example.intershop.repository.OrderItemRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -51,6 +53,10 @@ public class OrderItemService {
 
     public Optional<OrderItem> findById(Long id) {
         return repository.findById(id);
+    }
+
+    public List<Item> findByOrderId(Long orderId) {
+        return repository.findByOrderId(orderId);
     }
 
     public OrderItem update(OrderItem orderItem) {

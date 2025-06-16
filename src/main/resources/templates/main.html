@@ -18,7 +18,7 @@
                 <form>
                     <p>
                         <label for="search">Найти: </label>
-                        <input id="search" style="width:300px;" name="search" th:value="${search}">
+                        <input id="search" style="width:300px;" name="search" th:value="${search}"/>
                         <button name="action">&#128269;</button>
                     </p>
                     <p>
@@ -53,7 +53,7 @@
                     <tr>
                         <td>
                             <a th:href="${'/items/'+item.getId()}">
-                                <img width="300" height="300" th:src="${'http://localhost:8080/'+item.getImgPath()}">
+                                <img width="300" height="300" th:src="${'http://localhost:8080/'+item.getImgPath()}"/>
                             </a>
                         </td>
                     </tr>

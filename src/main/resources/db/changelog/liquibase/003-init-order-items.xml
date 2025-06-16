@@ -22,10 +22,11 @@
             <column name="count" type="int">
                 <constraints nullable="false"/>
             </column>
-            <column name="price" type="number">
-                <constraints nullable="false"/>
-            </column>
         </createTable>
+        <createIndex indexName="idx_order_items_item_id" tableName="order_items" unique="true">
+            <column name="order_id"/>
+            <column name="item_id"/>
+        </createIndex>
         <rollback>
             <dropTable tableName="order_items"/>
         </rollback>

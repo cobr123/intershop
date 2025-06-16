@@ -13,10 +13,13 @@
             <column name="id" type="bigserial">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="status" type="varchar(255)">
+            <column name="status" type="varchar(32)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
+        <sql indexName="idx_orders_status" tableName="orders">
+            CREATE UNIQUE INDEX uidx_orders_status ON orders (status) WHERE (status = 'NEW');
+        </sql>
         <rollback>
             <dropTable tableName="orders"/>
         </rollback>

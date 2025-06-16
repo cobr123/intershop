@@ -55,12 +55,12 @@ public class ItemService {
         repository.deleteById(id);
     }
 
-    public List<List<Item>> grouped(List<Item> list, int size) {
+    public List<List<Item>> grouped(List<Item> list, int lineSize) {
         var result = new ArrayList<List<Item>>();
         var acc = new ArrayList<Item>();
         for (Item item : list) {
             acc.add(item);
-            if (acc.size() >= size) {
+            if (acc.size() >= lineSize) {
                 result.add(acc);
                 acc = new ArrayList<>();
             }

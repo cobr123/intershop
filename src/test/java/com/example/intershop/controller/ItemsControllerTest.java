@@ -34,7 +34,7 @@ public class ItemsControllerTest {
     public void testItemsListAdd() throws Exception {
         mockMvc.perform(post("/items/1").param("action", "PLUS"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/main/items/1"));
+                .andExpect(redirectedUrl("/items/1"));
     }
 
 }

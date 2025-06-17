@@ -34,7 +34,7 @@ public class OrdersControllerTest {
         mockMvc.perform(get("/orders/1"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("text/html;charset=UTF-8"))
-                .andExpect(view().name("orders"))
+                .andExpect(view().name("order"))
                 .andExpect(model().attributeExists("order"))
                 .andExpect(model().attributeExists("newOrder"))
                 .andExpect(xpath("//table").exists());
@@ -45,7 +45,7 @@ public class OrdersControllerTest {
         mockMvc.perform(get("/orders/1?newOrder=true"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("text/html;charset=UTF-8"))
-                .andExpect(view().name("orders"))
+                .andExpect(view().name("order"))
                 .andExpect(model().attributeExists("order"))
                 .andExpect(model().attributeExists("newOrder"))
                 .andExpect(xpath("//table").exists());

@@ -45,7 +45,7 @@ public class OrdersController {
         model.addAttribute("order", new OrderUi(order.getId(), items));
         model.addAttribute("newOrder", newOrder);
 
-        return "orders";
+        return "order";
     }
 
 }

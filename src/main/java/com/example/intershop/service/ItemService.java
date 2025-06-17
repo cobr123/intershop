@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-
 @Service
 public class ItemService {
 
@@ -30,7 +29,8 @@ public class ItemService {
             return findAll(itemSort, pageSize, pageNumber, lineSize);
         } else {
             var pageable = itemSort.toPageable(pageSize, pageNumber);
-            var page = repository.findByTitleLikeOrDescriptionLike("%" + search + "%", search, pageable);
+            var searchLike = "%" + search + "%";
+            var page = repository.findByTitleLikeOrDescriptionLike(searchLike, searchLike, pageable);
             var paging = new Paging(pageNumber, pageSize, page.hasNext(), page.hasPrevious());
             return new Items(grouped(page.stream().toList(), lineSize), paging);
         }

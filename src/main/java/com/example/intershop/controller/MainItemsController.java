@@ -8,6 +8,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Controller
 @RequestMapping("/main/items")
 public class MainItemsController {
@@ -30,7 +32,20 @@ public class MainItemsController {
             @RequestParam(required = false, defaultValue = "10", name = "pageSize") int pageSize,
             @RequestParam(required = false, defaultValue = "1", name = "pageNumber") int pageNumber
     ) {
+        Order order = orderService.findNewOrder();
+        List<OrderItem> orderItems = orderItemService.findOrderItemsByOrderId(order.getId());
         Items items = itemService.findByTitleLikeOrDescriptionLike(search, itemSort, pageSize, pageNumber, 3);
+        for (var line : items.items()) {
+            for (var item : line) {
+                item.setCount(0);
+                for (var orderItem : orderItems) {
+                    if (orderItem.getItemId().equals(item.getId())) {
+                        item.setCount(orderItem.getCount());
+                        break;
+                    }
+                }
+            }
+        }
         model.addAttribute("search", search);
         model.addAttribute("sort", itemSort.name());
         model.addAttribute("items", items.items());

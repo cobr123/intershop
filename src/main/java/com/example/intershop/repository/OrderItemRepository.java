@@ -13,6 +13,8 @@ import java.util.Optional;
 public interface OrderItemRepository extends CrudRepository<OrderItem, Long> {
     Optional<OrderItem> findByOrderIdAndItemId(Long orderId, Long itemId);
 
-    @Query(value = "select i.* from items i, order_items oi where oi.order_id = ?1 and i.id = oi.item_id", nativeQuery = true)
+    @Query(value = "select i.id, i.title, i.description, i.img_path, oi.count, i.price from items i, order_items oi where oi.order_id = ?1 and i.id = oi.item_id", nativeQuery = true)
     List<Item> findByOrderId(Long orderId);
+
+    List<OrderItem> findOrderItemsByOrderId(Long orderId);
 }

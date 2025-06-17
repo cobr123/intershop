@@ -59,6 +59,14 @@ public class OrderItemService {
         return repository.findByOrderId(orderId);
     }
 
+    public List<OrderItem> findOrderItemsByOrderId(Long orderId) {
+        return repository.findOrderItemsByOrderId(orderId);
+    }
+
+    public Optional<OrderItem> findByOrderIdAndItemId(Long orderId, Long itemId) {
+        return repository.findByOrderIdAndItemId(orderId, itemId);
+    }
+
     public OrderItem update(OrderItem orderItem) {
         return repository.save(orderItem);
     }

@@ -27,6 +27,15 @@ public class ItemsController {
     @GetMapping("/{id}")
     public String getItem(Model model, @PathVariable("id") Long itemId) {
         Item item = itemService.findById(itemId).orElseThrow();
+        item.setCount(0);
+        var order = orderService.findNewOrder();
+        var orderItemOptional = orderItemService.findByOrderIdAndItemId(order.getId(), item.getId());
+        orderItemOptional.map(orderItem -> {
+            if (orderItem.getItemId().equals(item.getId())) {
+                item.setCount(orderItem.getCount());
+            }
+            return null;
+        });
         model.addAttribute("item", item);
 
         return "item";
@@ -37,7 +46,7 @@ public class ItemsController {
         Order order = orderService.findNewOrder();
         orderItemService.update(order.getId(), itemId, action);
 
-        return "redirect:/main/items/" + itemId;
+        return "redirect:/items/" + itemId;
     }
 
 }

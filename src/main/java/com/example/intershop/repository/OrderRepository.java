@@ -10,4 +10,5 @@ import java.util.Optional;
 @Repository
 public interface OrderRepository extends CrudRepository<Order, Long> {
     Optional<Order> findByStatus(OrderStatus status);
+    Iterable<Order> findByStatusIsNot(OrderStatus status);
 }

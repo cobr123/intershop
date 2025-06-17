@@ -29,7 +29,7 @@ public class OrdersController {
     @GetMapping
     public String getAll(Model model) {
         List<OrderUi> orders = new ArrayList<>();
-        for (Order o : orderService.findAll()) {
+        for (Order o : orderService.findAllNotNew()) {
             var items = orderItemService.findByOrderId(o.getId());
             orders.add(new OrderUi(o.getId(), items));
         }

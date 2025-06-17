@@ -25,8 +25,8 @@ public class OrderService {
                 .orElseGet(() -> insert(new Order(OrderStatus.NEW)));
     }
 
-    public Iterable<Order> findAll() {
-        return orderRepository.findAll();
+    public Iterable<Order> findAllNotNew() {
+        return orderRepository.findByStatusIsNot(OrderStatus.NEW);
     }
 
     public Optional<Order> findById(Long id) {

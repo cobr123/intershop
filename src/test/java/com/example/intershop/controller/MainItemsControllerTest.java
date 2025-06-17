@@ -37,7 +37,7 @@ public class MainItemsControllerTest {
     public void testSearchMainItemsList() throws Exception {
         mockMvc.perform(get("/main/items")
                         .param("search", "tl")
-                        .param("sort", "PRICE"))
+                        .param("sort", "Price"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("text/html;charset=UTF-8"))
                 .andExpect(view().name("main"))

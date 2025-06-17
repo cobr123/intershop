@@ -7,7 +7,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Controller
@@ -26,8 +25,9 @@ public class CartItemsController {
     public String getOrderItems(Model model) {
         Order order = orderService.findNewOrder();
         List<Item> items = orderItemService.findByOrderId(order.getId());
+        OrderUi orderUi = new OrderUi(order.getId(), items);
         model.addAttribute("items", items);
-        model.addAttribute("total", items.stream().map(Item::getPrice).reduce(BigDecimal::add).orElse(BigDecimal.ZERO));
+        model.addAttribute("total", orderUi.totalSum());
         model.addAttribute("empty", items.isEmpty());
 
         return "cart";
@@ -38,7 +38,7 @@ public class CartItemsController {
         Order order = orderService.findNewOrder();
         orderItemService.update(order.getId(), itemId, action);
 
-        return "redirect:/main/items";
+        return "redirect:/cart/items";
     }
 
 }

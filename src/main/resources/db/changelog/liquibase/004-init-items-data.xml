@@ -12,11 +12,11 @@
             </not>
         </preConditions>
         <sql>
-            INSERT INTO items (title, description, count, price) values ('title1', 'description1', 1, 101.1);
-            INSERT INTO items (title, description, count, price) values ('title2', 'description2', 2, 102.2);
+            INSERT INTO items (title, description, count, price) values ('title1', 'description1', 1, 105.1);
+            INSERT INTO items (title, description, count, price) values ('title2', 'description2', 2, 104.2);
             INSERT INTO items (title, description, count, price) values ('title3', 'description3', 3, 103.3);
-            INSERT INTO items (title, description, count, price) values ('title4', 'description4', 4, 104.4);
-            INSERT INTO items (title, description, count, price) values ('title5', 'description5', 5, 105.5);
+            INSERT INTO items (title, description, count, price) values ('title4', 'description4', 4, 102.4);
+            INSERT INTO items (title, description, count, price) values ('title5', 'description5', 5, 101.5);
             INSERT INTO orders (status) values ('GATHERING');
             INSERT INTO order_items (order_id, item_id, count) values (1, 1, 1);
         </sql>

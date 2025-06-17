@@ -1,5 +1,6 @@
 package com.example.intershop.model;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
@@ -15,8 +16,6 @@ public enum ItemSort {
     }
 
     public Pageable toPageable(int pageSize, int pageNumber) {
-        var pageable = Pageable.ofSize(pageSize).withPage(pageNumber - 1);
-        pageable.getSort().and(toSort());
-        return pageable;
+        return PageRequest.of(pageNumber - 1, pageSize, toSort());
     }
 }

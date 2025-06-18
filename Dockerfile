@@ -18,4 +18,5 @@ RUN mvn package -Dmaven.test.skip
 # Run the application (using the JRE, not the JDK)
 FROM amazoncorretto:21-alpine-jdk AS runtime
 COPY --from=build /build/target/*.jar app.jar
+RUN mkdir /items_images
 CMD ["java", "-jar", "/app.jar"]

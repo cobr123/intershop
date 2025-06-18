@@ -4,6 +4,7 @@ import com.example.intershop.model.*;
 import com.example.intershop.service.ItemService;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
+import jakarta.validation.constraints.Min;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -29,8 +30,8 @@ public class MainItemsController {
             Model model,
             @RequestParam(required = false, defaultValue = "", name = "search") String search,
             @RequestParam(required = false, defaultValue = "NO", name = "sort") ItemSort itemSort,
-            @RequestParam(required = false, defaultValue = "10", name = "pageSize") int pageSize,
-            @RequestParam(required = false, defaultValue = "1", name = "pageNumber") int pageNumber
+            @RequestParam(required = false, defaultValue = "10", name = "pageSize") @Min(1) int pageSize,
+            @RequestParam(required = false, defaultValue = "1", name = "pageNumber") @Min(1) int pageNumber
     ) {
         Order order = orderService.findNewOrder();
         List<OrderItem> orderItems = orderItemService.findOrderItemsByOrderId(order.getId());

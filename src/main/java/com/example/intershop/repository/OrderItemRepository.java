@@ -24,4 +24,7 @@ public interface OrderItemRepository extends CrudRepository<OrderItem, Long>, Pa
 
     @Query(value = "select i.id, i.title, i.description, i.img_path, oi.count, i.price from items i left join order_items oi on oi.item_id = i.id and oi.order_id = ?1", nativeQuery = true)
     Page<ItemUi> findByTitleLikeOrDescriptionLike(Long orderId, String title, String description, Pageable pageable);
+
+    @Query(value = "select i.id, i.title, i.description, i.img_path, oi.count, i.price from items i left join order_items oi on oi.item_id = i.id and oi.order_id = ?1", nativeQuery = true)
+    Page<ItemUi> findAll(Long orderId, Pageable pageable);
 }

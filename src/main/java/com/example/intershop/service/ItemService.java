@@ -30,11 +30,4 @@ public class ItemService {
     public void deleteById(Long id) {
         repository.deleteById(id);
     }
-
-    public Items findAll(ItemSort itemSort, int pageSize, int pageNumber) {
-        var pageable = itemSort.toPageable(pageSize, pageNumber);
-        var page = repository.findAll(pageable);
-        var paging = new Paging(pageNumber, pageSize, page.hasNext(), page.hasPrevious());
-        return new Items(ItemUi.grouped(page.stream().map(ItemUi::new).toList()), paging);
-    }
 }

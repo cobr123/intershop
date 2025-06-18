@@ -160,7 +160,8 @@ public class OrderItemRepositoryTest {
     @Test
     public void testFindAll() {
         var item = itemService.insert(new Item("title", BigDecimal.valueOf(2.5)));
-        var foundItems = itemService.findAll(ItemSort.NO, 10, 1);
+        var order = orderService.findNewOrder();
+        var foundItems = orderItemService.findAll(order.getId(), ItemSort.NO, 10, 1);
 
         assertThat(item)
                 .isNotNull()
@@ -179,7 +180,8 @@ public class OrderItemRepositoryTest {
     public void testFindAllPaginationBegin() {
         var item1 = itemService.insert(new Item("title1", BigDecimal.valueOf(1)));
         var item2 = itemService.insert(new Item("title2", BigDecimal.valueOf(2)));
-        var foundItems = itemService.findAll(ItemSort.NO, 1, 1);
+        var order = orderService.findNewOrder();
+        var foundItems = orderItemService.findAll(order.getId(), ItemSort.NO, 1, 1);
 
         assertThat(item1)
                 .isNotNull()
@@ -204,7 +206,8 @@ public class OrderItemRepositoryTest {
     public void testFindAllPaginationEnd() {
         var item1 = itemService.insert(new Item("title1", BigDecimal.valueOf(1)));
         var item2 = itemService.insert(new Item("title2", BigDecimal.valueOf(2)));
-        var foundItems = itemService.findAll(ItemSort.NO, 1, 2);
+        var order = orderService.findNewOrder();
+        var foundItems = orderItemService.findAll(order.getId(), ItemSort.NO, 1, 2);
 
         assertThat(item1)
                 .isNotNull()

@@ -54,7 +54,7 @@ public class MainItemsControllerTest {
         Items items = new Items(ItemUi.grouped(List.of(item1, item2)), paging);
 
         doReturn(order).when(orderService).findNewOrder();
-        doReturn(items).when(itemService).findAll(any(), anyInt(), anyInt());
+        doReturn(items).when(orderItemService).findAll(anyLong(), any(), anyInt(), anyInt());
 
         mockMvc.perform(get("/main/items"))
                 .andExpect(status().isOk())
@@ -106,7 +106,7 @@ public class MainItemsControllerTest {
         Items items = new Items(ItemUi.grouped(List.of(item1, item2)), paging);
 
         doReturn(order).when(orderService).findNewOrder();
-        doReturn(items).when(itemService).findAll(any(), anyInt(), anyInt());
+        doReturn(items).when(orderItemService).findAll(anyLong(), any(), anyInt(), anyInt());
 
         mockMvc.perform(get("/main/items")
                         .param("pageSize", "10")

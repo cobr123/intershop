@@ -24,14 +24,6 @@ public class ItemUi {
         this.count = count;
     }
 
-    public ItemUi(Item item) {
-        id = item.getId();
-        title = item.getTitle();
-        description = item.getDescription();
-        imgPath = item.getImgPath();
-        price = item.getPrice();
-    }
-
     public Long getId() {
         return id;
     }

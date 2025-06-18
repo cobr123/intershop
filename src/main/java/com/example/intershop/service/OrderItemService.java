@@ -24,6 +24,13 @@ public class OrderItemService {
         return new Items(ItemUi.grouped(page.stream().toList()), paging);
     }
 
+    public Items findAll(Long orderId, ItemSort itemSort, int pageSize, int pageNumber) {
+        var pageable = itemSort.toPageable(pageSize, pageNumber);
+        var page = repository.findAll(orderId, pageable);
+        var paging = new Paging(pageNumber, pageSize, page.hasNext(), page.hasPrevious());
+        return new Items(ItemUi.grouped(page.stream().toList()), paging);
+    }
+
     public void update(Long orderId, Long itemId, ItemAction action) {
         Optional<OrderItem> orderItemOptional = repository.findOrderItemByOrderIdAndItemId(orderId, itemId);
         switch (action) {

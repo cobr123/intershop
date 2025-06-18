@@ -34,7 +34,7 @@ public class MainItemsController {
         Order order = orderService.findNewOrder();
         Items items;
         if (search.isBlank()) {
-            items = itemService.findAll(itemSort, pageSize, pageNumber);
+            items = orderItemService.findAll(order.getId(), itemSort, pageSize, pageNumber);
         } else {
             items = orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), search, itemSort, pageSize, pageNumber);
         }

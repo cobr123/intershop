@@ -17,25 +17,21 @@ public class Item {
     @Column
     private String imgPath;
     @Column(nullable = false)
-    private Integer count;
-    @Column(nullable = false)
     private BigDecimal price;
 
     public Item() {
     }
 
-    public Item(String title, Integer count, BigDecimal price) {
+    public Item(String title, BigDecimal price) {
         this.title = title;
-        this.count = count;
         this.price = price;
     }
 
-    public Item(Long id, String title, String description, String imgPath, Integer count, BigDecimal price) {
+    public Item(Long id, String title, String description, String imgPath, BigDecimal price) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.imgPath = imgPath;
-        this.count = count;
         this.price = price;
     }
 
@@ -69,14 +65,6 @@ public class Item {
 
     public void setImgPath(String imgPath) {
         this.imgPath = imgPath;
-    }
-
-    public Integer getCount() {
-        return count;
-    }
-
-    public void setCount(Integer count) {
-        this.count = count;
     }
 
     public BigDecimal getPrice() {

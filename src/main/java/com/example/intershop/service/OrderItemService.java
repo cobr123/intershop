@@ -1,8 +1,6 @@
 package com.example.intershop.service;
 
-import com.example.intershop.model.Item;
-import com.example.intershop.model.ItemAction;
-import com.example.intershop.model.OrderItem;
+import com.example.intershop.model.*;
 import com.example.intershop.repository.OrderItemRepository;
 import org.springframework.stereotype.Service;
 
@@ -18,8 +16,16 @@ public class OrderItemService {
         this.repository = repository;
     }
 
+    public Items findByTitleLikeOrDescriptionLike(Long orderId, String search, ItemSort itemSort, int pageSize, int pageNumber) {
+        var pageable = itemSort.toPageable(pageSize, pageNumber);
+        var searchLike = "%" + search + "%";
+        var page = repository.findByTitleLikeOrDescriptionLike(orderId, searchLike, searchLike, pageable);
+        var paging = new Paging(pageNumber, pageSize, page.hasNext(), page.hasPrevious());
+        return new Items(ItemUi.grouped(page.stream().toList()), paging);
+    }
+
     public void update(Long orderId, Long itemId, ItemAction action) {
-        Optional<OrderItem> orderItemOptional = repository.findByOrderIdAndItemId(orderId, itemId);
+        Optional<OrderItem> orderItemOptional = repository.findOrderItemByOrderIdAndItemId(orderId, itemId);
         switch (action) {
             case PLUS -> {
                 if (orderItemOptional.isPresent()) {
@@ -55,15 +61,11 @@ public class OrderItemService {
         return repository.findById(id);
     }
 
-    public List<Item> findByOrderId(Long orderId) {
+    public List<ItemUi> findByOrderId(Long orderId) {
         return repository.findByOrderId(orderId);
     }
 
-    public List<OrderItem> findOrderItemsByOrderId(Long orderId) {
-        return repository.findOrderItemsByOrderId(orderId);
-    }
-
-    public Optional<OrderItem> findByOrderIdAndItemId(Long orderId, Long itemId) {
+    public Optional<ItemUi> findByOrderIdAndItemId(Long orderId, Long itemId) {
         return repository.findByOrderIdAndItemId(orderId, itemId);
     }
 

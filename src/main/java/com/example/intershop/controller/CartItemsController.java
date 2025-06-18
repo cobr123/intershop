@@ -24,7 +24,7 @@ public class CartItemsController {
     @GetMapping
     public String getOrderItems(Model model) {
         Order order = orderService.findNewOrder();
-        List<Item> items = orderItemService.findByOrderId(order.getId());
+        List<ItemUi> items = orderItemService.findByOrderId(order.getId());
         OrderUi orderUi = new OrderUi(order.getId(), items);
         model.addAttribute("items", items);
         model.addAttribute("total", orderUi.totalSum());

@@ -26,17 +26,9 @@ public class ItemsController {
 
     @GetMapping("/{id}")
     public String getItem(Model model, @PathVariable("id") Long itemId) {
-        Item item = itemService.findById(itemId).orElseThrow();
-        item.setCount(0);
         var order = orderService.findNewOrder();
-        var orderItemOptional = orderItemService.findByOrderIdAndItemId(order.getId(), item.getId());
-        orderItemOptional.map(orderItem -> {
-            if (orderItem.getItemId().equals(item.getId())) {
-                item.setCount(orderItem.getCount());
-            }
-            return null;
-        });
-        model.addAttribute("item", item);
+        ItemUi itemUi = orderItemService.findByOrderIdAndItemId(order.getId(), itemId).orElseThrow();
+        model.addAttribute("item", itemUi);
 
         return "item";
     }

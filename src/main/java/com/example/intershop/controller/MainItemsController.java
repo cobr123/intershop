@@ -9,8 +9,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @Controller
 @RequestMapping("/main/items")
 public class MainItemsController {
@@ -34,18 +32,11 @@ public class MainItemsController {
             @RequestParam(required = false, defaultValue = "1", name = "pageNumber") @Min(1) int pageNumber
     ) {
         Order order = orderService.findNewOrder();
-        List<OrderItem> orderItems = orderItemService.findOrderItemsByOrderId(order.getId());
-        Items items = itemService.findByTitleLikeOrDescriptionLike(search, itemSort, pageSize, pageNumber, 3);
-        for (var line : items.items()) {
-            for (var item : line) {
-                item.setCount(0);
-                for (var orderItem : orderItems) {
-                    if (orderItem.getItemId().equals(item.getId())) {
-                        item.setCount(orderItem.getCount());
-                        break;
-                    }
-                }
-            }
+        Items items;
+        if (search.isBlank()) {
+            items = itemService.findAll(itemSort, pageSize, pageNumber);
+        } else {
+            items = orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), search, itemSort, pageSize, pageNumber);
         }
         model.addAttribute("search", search);
         model.addAttribute("sort", itemSort.name());

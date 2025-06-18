@@ -14,6 +14,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -40,7 +41,7 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testCreate() {
-        var item = itemService.insert(new Item("title", 1, BigDecimal.valueOf(2.5)));
+        var item = itemService.insert(new Item("title", BigDecimal.valueOf(2.5)));
         var order = orderService.findNewOrder();
         var orderItem = orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1));
 
@@ -53,7 +54,7 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testChangeCount() {
-        var item = itemService.insert(new Item("title", 1, BigDecimal.valueOf(2.5)));
+        var item = itemService.insert(new Item("title", BigDecimal.valueOf(2.5)));
         var order = orderService.findNewOrder();
         var orderItem = orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1));
 
@@ -72,7 +73,7 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testFindByOrderId() {
-        var item = itemService.insert(new Item("title", 1, BigDecimal.valueOf(2.5)));
+        var item = itemService.insert(new Item("title", BigDecimal.valueOf(2.5)));
         var order = orderService.findNewOrder();
         var orderItem = orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1));
 
@@ -83,8 +84,150 @@ public class OrderItemRepositoryTest {
     }
 
     @Test
+    public void testFindByName() {
+        var title = UUID.randomUUID().toString();
+        var item = itemService.insert(new Item("123" + title + "456", BigDecimal.valueOf(2.5)));
+        var order = orderService.findNewOrder();
+        var foundItems = orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), title, ItemSort.NO, 10, 1);
+
+        assertThat(item)
+                .isNotNull()
+                .withFailMessage("Созданной записи должен был быть присвоен ID")
+                .extracting(Item::getId)
+                .isNotNull();
+
+        assertThat(foundItems.items().size()).isEqualTo(1);
+        assertThat(foundItems.items().get(0).size()).isEqualTo(1);
+        assertThat(foundItems.items().get(0).get(0).getId()).isEqualTo(item.getId());
+        assertThat(foundItems.paging().hasNext()).isEqualTo(false);
+        assertThat(foundItems.paging().hasPrevious()).isEqualTo(false);
+    }
+
+    @Test
+    public void testFindByNamePaginationBegin() {
+        var title = UUID.randomUUID().toString();
+        var item1 = itemService.insert(new Item("1_" + title + "_1", BigDecimal.valueOf(1)));
+        var item2 = itemService.insert(new Item("2_" + title + "_2", BigDecimal.valueOf(2)));
+        var order = orderService.findNewOrder();
+        var foundItems = orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), title, ItemSort.NO, 1, 1);
+
+        assertThat(item1)
+                .isNotNull()
+                .withFailMessage("Созданной записи должен был быть присвоен ID")
+                .extracting(Item::getId)
+                .isNotNull();
+
+        assertThat(item2)
+                .isNotNull()
+                .withFailMessage("Созданной записи должен был быть присвоен ID")
+                .extracting(Item::getId)
+                .isNotNull();
+
+        assertThat(foundItems.items().size()).isEqualTo(1);
+        assertThat(foundItems.items().get(0).size()).isEqualTo(1);
+        assertThat(foundItems.items().get(0).get(0).getId()).isEqualTo(item1.getId());
+        assertThat(foundItems.paging().hasNext()).isEqualTo(true);
+        assertThat(foundItems.paging().hasPrevious()).isEqualTo(false);
+    }
+
+    @Test
+    public void testFindByNamePaginationEnd() {
+        var title = UUID.randomUUID().toString();
+        var item1 = itemService.insert(new Item("1_" + title + "_1", BigDecimal.valueOf(1)));
+        var item2 = itemService.insert(new Item("2_" + title + "_2", BigDecimal.valueOf(2)));
+        var order = orderService.findNewOrder();
+        var foundItems = orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), title, ItemSort.NO, 1, 2);
+
+        assertThat(item1)
+                .isNotNull()
+                .withFailMessage("Созданной записи должен был быть присвоен ID")
+                .extracting(Item::getId)
+                .isNotNull();
+
+        assertThat(item2)
+                .isNotNull()
+                .withFailMessage("Созданной записи должен был быть присвоен ID")
+                .extracting(Item::getId)
+                .isNotNull();
+
+        assertThat(foundItems.items().size()).isEqualTo(1);
+        assertThat(foundItems.items().get(0).size()).isEqualTo(1);
+        assertThat(foundItems.items().get(0).get(0).getId()).isEqualTo(item2.getId());
+        assertThat(foundItems.paging().hasNext()).isEqualTo(false);
+        assertThat(foundItems.paging().hasPrevious()).isEqualTo(true);
+    }
+
+    @Test
+    public void testFindAll() {
+        var item = itemService.insert(new Item("title", BigDecimal.valueOf(2.5)));
+        var foundItems = itemService.findAll(ItemSort.NO, 10, 1);
+
+        assertThat(item)
+                .isNotNull()
+                .withFailMessage("Созданной записи должен был быть присвоен ID")
+                .extracting(Item::getId)
+                .isNotNull();
+
+        assertThat(foundItems.items().size()).isEqualTo(1);
+        assertThat(foundItems.items().get(0).size()).isEqualTo(1);
+        assertThat(foundItems.items().get(0).get(0).getId()).isEqualTo(item.getId());
+        assertThat(foundItems.paging().hasNext()).isEqualTo(false);
+        assertThat(foundItems.paging().hasPrevious()).isEqualTo(false);
+    }
+
+    @Test
+    public void testFindAllPaginationBegin() {
+        var item1 = itemService.insert(new Item("title1", BigDecimal.valueOf(1)));
+        var item2 = itemService.insert(new Item("title2", BigDecimal.valueOf(2)));
+        var foundItems = itemService.findAll(ItemSort.NO, 1, 1);
+
+        assertThat(item1)
+                .isNotNull()
+                .withFailMessage("Созданной записи должен был быть присвоен ID")
+                .extracting(Item::getId)
+                .isNotNull();
+
+        assertThat(item2)
+                .isNotNull()
+                .withFailMessage("Созданной записи должен был быть присвоен ID")
+                .extracting(Item::getId)
+                .isNotNull();
+
+        assertThat(foundItems.items().size()).isEqualTo(1);
+        assertThat(foundItems.items().get(0).size()).isEqualTo(1);
+        assertThat(foundItems.items().get(0).get(0).getId()).isEqualTo(item1.getId());
+        assertThat(foundItems.paging().hasNext()).isEqualTo(true);
+        assertThat(foundItems.paging().hasPrevious()).isEqualTo(false);
+    }
+
+    @Test
+    public void testFindAllPaginationEnd() {
+        var item1 = itemService.insert(new Item("title1", BigDecimal.valueOf(1)));
+        var item2 = itemService.insert(new Item("title2", BigDecimal.valueOf(2)));
+        var foundItems = itemService.findAll(ItemSort.NO, 1, 2);
+
+        assertThat(item1)
+                .isNotNull()
+                .withFailMessage("Созданной записи должен был быть присвоен ID")
+                .extracting(Item::getId)
+                .isNotNull();
+
+        assertThat(item2)
+                .isNotNull()
+                .withFailMessage("Созданной записи должен был быть присвоен ID")
+                .extracting(Item::getId)
+                .isNotNull();
+
+        assertThat(foundItems.items().size()).isEqualTo(1);
+        assertThat(foundItems.items().get(0).size()).isEqualTo(1);
+        assertThat(foundItems.items().get(0).get(0).getId()).isEqualTo(item2.getId());
+        assertThat(foundItems.paging().hasNext()).isEqualTo(false);
+        assertThat(foundItems.paging().hasPrevious()).isEqualTo(true);
+    }
+
+    @Test
     public void testDelete() {
-        var item = itemService.insert(new Item("title", 1, BigDecimal.valueOf(2.5)));
+        var item = itemService.insert(new Item("title", BigDecimal.valueOf(2.5)));
         var order = orderService.findNewOrder();
         var orderItem = orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1));
         orderItemService.deleteById(orderItem.getId());

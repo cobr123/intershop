@@ -1,22 +1,22 @@
 package com.example.intershop.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
 
-@Entity
 @Table(name = "items")
 public class Item {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(nullable = false)
+    @Column
     private String title;
     @Column
     private String description;
     @Column
     private String imgPath;
-    @Column(nullable = false)
+    @Column
     private BigDecimal price;
 
     public Item() {

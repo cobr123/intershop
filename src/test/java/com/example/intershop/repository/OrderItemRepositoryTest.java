@@ -6,12 +6,12 @@ import com.example.intershop.service.ItemService;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -21,7 +21,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @Import(IntershopApplicationTests.class)
-@Transactional
 public class OrderItemRepositoryTest {
 
     @Autowired
@@ -39,11 +38,19 @@ public class OrderItemRepositoryTest {
     @Autowired
     private OrderItemService orderItemService;
 
+    @BeforeEach
+    void setUp() {
+        orderItemRepository.deleteAll()
+                .flatMap(v -> orderRepository.deleteAll())
+                .flatMap(v -> itemRepository.deleteAll())
+                .block();
+    }
+
     @Test
     public void testCreate() {
-        var item = itemService.insert(new Item("title", BigDecimal.valueOf(2.5)));
-        var order = orderService.findNewOrder();
-        var orderItem = orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1));
+        var item = itemService.insert(new Item("title", BigDecimal.valueOf(2.5))).block();
+        var order = orderService.findNewOrder().block();
+        var orderItem = orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1)).block();
 
         assertThat(orderItem)
                 .isNotNull()
@@ -54,30 +61,30 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testChangeCount() {
-        var item = itemService.insert(new Item("title", BigDecimal.valueOf(2.5)));
-        var order = orderService.findNewOrder();
-        var orderItem = orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1));
+        var item = itemService.insert(new Item("title", BigDecimal.valueOf(2.5))).block();
+        var order = orderService.findNewOrder().block();
+        var orderItem = orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1)).block();
 
-        orderItemService.update(order.getId(), item.getId(), ItemAction.PLUS);
-        var incremented = orderItemService.findById(orderItem.getId()).get();
+        orderItemService.update(order.getId(), item.getId(), ItemAction.PLUS).block();
+        var incremented = orderItemService.findById(orderItem.getId()).block();
         assertThat(incremented.getCount()).isEqualTo(2);
 
-        orderItemService.update(order.getId(), item.getId(), ItemAction.MINUS);
-        var decremented = orderItemService.findById(orderItem.getId()).get();
+        orderItemService.update(order.getId(), item.getId(), ItemAction.MINUS).block();
+        var decremented = orderItemService.findById(orderItem.getId()).block();
         assertThat(decremented.getCount()).isEqualTo(1);
 
-        orderItemService.update(order.getId(), item.getId(), ItemAction.DELETE);
-        var deleted = orderItemService.findById(orderItem.getId());
-        assertThat(deleted.isEmpty()).isEqualTo(true);
+        orderItemService.update(order.getId(), item.getId(), ItemAction.DELETE).block();
+        var exists = orderItemService.existsById(orderItem.getId()).block();
+        assertThat(exists).isEqualTo(false);
     }
 
     @Test
     public void testFindByOrderId() {
-        var item = itemService.insert(new Item("title", BigDecimal.valueOf(2.5)));
-        var order = orderService.findNewOrder();
-        var orderItem = orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1));
+        var item = itemService.insert(new Item("title", BigDecimal.valueOf(2.5))).block();
+        var order = orderService.findNewOrder().block();
+        var orderItem = orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1)).block();
 
-        var orderItems = orderItemService.findByOrderId(order.getId());
+        var orderItems = orderItemService.findByOrderId(order.getId()).collectList().block();
 
         assertThat(orderItems.size()).isEqualTo(1);
         assertThat(orderItems.get(0).getId()).isEqualTo(orderItem.getItemId());
@@ -86,9 +93,9 @@ public class OrderItemRepositoryTest {
     @Test
     public void testFindByName() {
         var title = UUID.randomUUID().toString();
-        var item = itemService.insert(new Item("123" + title + "456", BigDecimal.valueOf(2.5)));
-        var order = orderService.findNewOrder();
-        var foundItems = orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), title, ItemSort.NO, 10, 1);
+        var item = itemService.insert(new Item("123" + title + "456", BigDecimal.valueOf(2.5))).block();
+        var order = orderService.findNewOrder().block();
+        var foundItems = orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), title, ItemSort.NO, 10, 1).block();
 
         assertThat(item)
                 .isNotNull()
@@ -106,10 +113,10 @@ public class OrderItemRepositoryTest {
     @Test
     public void testFindByNamePaginationBegin() {
         var title = UUID.randomUUID().toString();
-        var item1 = itemService.insert(new Item("1_" + title + "_1", BigDecimal.valueOf(1)));
-        var item2 = itemService.insert(new Item("2_" + title + "_2", BigDecimal.valueOf(2)));
-        var order = orderService.findNewOrder();
-        var foundItems = orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), title, ItemSort.NO, 1, 1);
+        var item1 = itemService.insert(new Item("1_" + title + "_1", BigDecimal.valueOf(1))).block();
+        var item2 = itemService.insert(new Item("2_" + title + "_2", BigDecimal.valueOf(2))).block();
+        var order = orderService.findNewOrder().block();
+        var foundItems = orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), title, ItemSort.NO, 1, 1).block();
 
         assertThat(item1)
                 .isNotNull()
@@ -133,10 +140,10 @@ public class OrderItemRepositoryTest {
     @Test
     public void testFindByNamePaginationEnd() {
         var title = UUID.randomUUID().toString();
-        var item1 = itemService.insert(new Item("1_" + title + "_1", BigDecimal.valueOf(1)));
-        var item2 = itemService.insert(new Item("2_" + title + "_2", BigDecimal.valueOf(2)));
-        var order = orderService.findNewOrder();
-        var foundItems = orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), title, ItemSort.NO, 1, 2);
+        var item1 = itemService.insert(new Item("1_" + title + "_1", BigDecimal.valueOf(1))).block();
+        var item2 = itemService.insert(new Item("2_" + title + "_2", BigDecimal.valueOf(2))).block();
+        var order = orderService.findNewOrder().block();
+        var foundItems = orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), title, ItemSort.NO, 1, 2).block();
 
         assertThat(item1)
                 .isNotNull()
@@ -159,9 +166,9 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testFindAll() {
-        var item = itemService.insert(new Item("title", BigDecimal.valueOf(2.5)));
-        var order = orderService.findNewOrder();
-        var foundItems = orderItemService.findAll(order.getId(), ItemSort.NO, 10, 1);
+        var item = itemService.insert(new Item("title", BigDecimal.valueOf(2.5))).block();
+        var order = orderService.findNewOrder().block();
+        var foundItems = orderItemService.findAll(order.getId(), ItemSort.NO, 10, 1).block();
 
         assertThat(item)
                 .isNotNull()
@@ -178,10 +185,10 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testFindAllPaginationBegin() {
-        var item1 = itemService.insert(new Item("title1", BigDecimal.valueOf(1)));
-        var item2 = itemService.insert(new Item("title2", BigDecimal.valueOf(2)));
-        var order = orderService.findNewOrder();
-        var foundItems = orderItemService.findAll(order.getId(), ItemSort.NO, 1, 1);
+        var item1 = itemService.insert(new Item("title1", BigDecimal.valueOf(1))).block();
+        var item2 = itemService.insert(new Item("title2", BigDecimal.valueOf(2))).block();
+        var order = orderService.findNewOrder().block();
+        var foundItems = orderItemService.findAll(order.getId(), ItemSort.NO, 1, 1).block();
 
         assertThat(item1)
                 .isNotNull()
@@ -204,10 +211,10 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testFindAllPaginationEnd() {
-        var item1 = itemService.insert(new Item("title1", BigDecimal.valueOf(1)));
-        var item2 = itemService.insert(new Item("title2", BigDecimal.valueOf(2)));
-        var order = orderService.findNewOrder();
-        var foundItems = orderItemService.findAll(order.getId(), ItemSort.NO, 1, 2);
+        var item1 = itemService.insert(new Item("title1", BigDecimal.valueOf(1))).block();
+        var item2 = itemService.insert(new Item("title2", BigDecimal.valueOf(2))).block();
+        var order = orderService.findNewOrder().block();
+        var foundItems = orderItemService.findAll(order.getId(), ItemSort.NO, 1, 2).block();
 
         assertThat(item1)
                 .isNotNull()
@@ -230,12 +237,12 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testDelete() {
-        var item = itemService.insert(new Item("title", BigDecimal.valueOf(2.5)));
-        var order = orderService.findNewOrder();
-        var orderItem = orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1));
-        orderItemService.deleteById(orderItem.getId());
+        var item = itemService.insert(new Item("title", BigDecimal.valueOf(2.5))).block();
+        var order = orderService.findNewOrder().block();
+        var orderItem = orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1)).block();
+        orderItemService.deleteById(orderItem.getId()).block();
 
-        assertThat(orderItemRepository.existsById(orderItem.getId()))
+        assertThat(orderItemRepository.existsById(orderItem.getId()).block())
                 .withFailMessage("Удалённая запись не должна быть найдена")
                 .isFalse();
     }

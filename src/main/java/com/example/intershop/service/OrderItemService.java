@@ -2,10 +2,10 @@ package com.example.intershop.service;
 
 import com.example.intershop.model.*;
 import com.example.intershop.repository.OrderItemRepository;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Service
 public class OrderItemService {
@@ -16,71 +16,90 @@ public class OrderItemService {
         this.repository = repository;
     }
 
-    public Items findByTitleLikeOrDescriptionLike(Long orderId, String search, ItemSort itemSort, int pageSize, int pageNumber) {
-        var pageable = itemSort.toPageable(pageSize, pageNumber);
-        var searchLike = "%" + search + "%";
-        var page = repository.findByTitleLikeOrDescriptionLike(orderId, searchLike, searchLike, pageable);
-        var paging = new Paging(pageNumber, pageSize, page.hasNext(), page.hasPrevious());
-        return new Items(ItemUi.grouped(page.stream().toList()), paging);
+    public Mono<Items> findByTitleLikeOrDescriptionLike(Long orderId, String search, ItemSort itemSort, int pageSize, int pageNumber) {
+        return Mono.fromCallable(() -> {
+                    var pageable = itemSort.toPageable(pageSize, pageNumber);
+                    var searchLike = "%" + search + "%";
+                    return Pair.of(pageable, searchLike);
+                })
+                .flatMap(pair -> repository.findByTitleLikeOrDescriptionLike(orderId, pair.getSecond(), pair.getSecond(), pair.getFirst()).collectList()
+                        .flatMap(items -> repository.countByOrderIdAndTitleLikeOrDescriptionLike(orderId, pair.getSecond(), pair.getSecond()).map(count -> Pair.of(items, count)))
+                )
+                .map(pair -> {
+                    var items = pair.getFirst();
+                    var totalCount = pair.getSecond();
+                    var paging = new Paging(pageNumber, pageSize, totalCount > (long) pageSize * pageNumber, pageNumber > 1);
+                    return new Items(ItemUi.grouped(items), paging);
+                });
     }
 
-    public Items findAll(Long orderId, ItemSort itemSort, int pageSize, int pageNumber) {
-        var pageable = itemSort.toPageable(pageSize, pageNumber);
-        var page = repository.findAll(orderId, pageable);
-        var paging = new Paging(pageNumber, pageSize, page.hasNext(), page.hasPrevious());
-        return new Items(ItemUi.grouped(page.stream().toList()), paging);
+    public Mono<Items> findAll(Long orderId, ItemSort itemSort, int pageSize, int pageNumber) {
+        return Mono.just(itemSort.toPageable(pageSize, pageNumber))
+                .flatMap(pageable -> repository.findAll(orderId, pageable).collectList())
+                .flatMap(items -> repository.countByOrderId(orderId).map(count -> Pair.of(items, count)))
+                .map(pair -> {
+                    var items = pair.getFirst();
+                    var totalCount = pair.getSecond();
+                    var paging = new Paging(pageNumber, pageSize, totalCount > (long) pageSize * pageNumber, pageNumber > 1);
+                    return new Items(ItemUi.grouped(items), paging);
+                });
     }
 
-    public void update(Long orderId, Long itemId, ItemAction action) {
-        Optional<OrderItem> orderItemOptional = repository.findOrderItemByOrderIdAndItemId(orderId, itemId);
-        switch (action) {
-            case PLUS -> {
-                if (orderItemOptional.isPresent()) {
-                    var orderItem = orderItemOptional.get();
-                    orderItem.setCount(orderItem.getCount() + 1);
-                    update(orderItem);
-                } else {
-                    insert(new OrderItem(orderId, itemId, 1));
-                }
-            }
-            case MINUS -> {
-                if (orderItemOptional.isPresent()) {
-                    var orderItem = orderItemOptional.get();
-                    if (orderItem.getCount() > 1) {
-                        orderItem.setCount(orderItem.getCount() - 1);
-                        update(orderItem);
-                    } else {
-                        deleteById(orderItem.getId());
-                    }
-                }
-            }
-            case DELETE -> {
-                orderItemOptional.ifPresent(orderItem -> deleteById(orderItem.getId()));
-            }
-        }
+    public Mono<Void> update(Long orderId, Long itemId, ItemAction action) {
+        return repository.findOrderItemByOrderIdAndItemId(orderId, itemId)
+                .flatMap(orderItem -> {
+                            switch (action) {
+                                case PLUS -> {
+                                    orderItem.setCount(orderItem.getCount() + 1);
+                                    return update(orderItem);
+                                }
+                                case MINUS -> {
+                                    if (orderItem.getCount() > 1) {
+                                        orderItem.setCount(orderItem.getCount() - 1);
+                                        return update(orderItem);
+                                    } else {
+                                        return deleteById(orderItem.getId());
+                                    }
+                                }
+                                case DELETE -> {
+                                    return deleteById(orderItem.getId());
+                                }
+                            }
+                            return null;
+                        }
+                ).switchIfEmpty(Mono.fromCallable(() ->
+                        switch (action) {
+                            case PLUS -> insert(new OrderItem(orderId, itemId, 1));
+                            case MINUS, DELETE -> null;
+                        }))
+                .then();
     }
 
-    public OrderItem insert(OrderItem orderItem) {
+    public Mono<OrderItem> insert(OrderItem orderItem) {
         return repository.save(orderItem);
     }
 
-    public Optional<OrderItem> findById(Long id) {
+    public Mono<OrderItem> findById(Long id) {
         return repository.findById(id);
     }
 
-    public List<ItemUi> findByOrderId(Long orderId) {
+    public Flux<ItemUi> findByOrderId(Long orderId) {
         return repository.findByOrderId(orderId);
     }
 
-    public Optional<ItemUi> findByOrderIdAndItemId(Long orderId, Long itemId) {
+    public Mono<ItemUi> findByOrderIdAndItemId(Long orderId, Long itemId) {
         return repository.findByOrderIdAndItemId(orderId, itemId);
     }
 
-    public OrderItem update(OrderItem orderItem) {
+    public Mono<OrderItem> update(OrderItem orderItem) {
         return repository.save(orderItem);
     }
 
-    public void deleteById(Long id) {
-        repository.deleteById(id);
+    public Mono<Void> deleteById(Long id) {
+        return repository.deleteById(id);
+    }
+
+    public Mono<Boolean> existsById(Long id) {
+        return repository.existsById(id);
     }
 }

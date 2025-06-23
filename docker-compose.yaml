@@ -21,3 +21,9 @@ services:
       - POSTGRES_PASSWORD=root
       - DB_HOST=db
       - DB_PORT=5432
+      - spring.r2dbc.url=r2dbc:postgresql://db:5432/intershop
+      - spring.r2dbc.username=root
+      - spring.r2dbc.password=root
+      - spring.liquibase.url=jdbc:postgresql://db:5432/intershop
+      - spring.liquibase.username=root
+      - spring.liquibase.password=root

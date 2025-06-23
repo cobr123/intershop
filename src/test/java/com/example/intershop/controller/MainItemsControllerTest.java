@@ -1,16 +1,17 @@
 package com.example.intershop.controller;
 
 import com.example.intershop.model.*;
-import com.example.intershop.service.ItemService;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -18,26 +19,21 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(MainItemsController.class)
+@WebFluxTest(MainItemsController.class)
 public class MainItemsControllerTest {
 
-    @MockitoBean
-    private ItemService itemService;
     @MockitoBean
     private OrderService orderService;
     @MockitoBean
     private OrderItemService orderItemService;
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebTestClient webTestClient;
 
     @BeforeEach
     void setUp() {
-        Mockito.reset(itemService);
         Mockito.reset(orderService);
         Mockito.reset(orderItemService);
     }
@@ -53,12 +49,16 @@ public class MainItemsControllerTest {
         var paging = new Paging(1, 10, false, false);
         Items items = new Items(ItemUi.grouped(List.of(item1, item2)), paging);
 
-        doReturn(order).when(orderService).findNewOrder();
-        doReturn(items).when(orderItemService).findAll(anyLong(), any(), anyInt(), anyInt());
+        doReturn(Mono.just(order)).when(orderService).findNewOrder();
+        doReturn(Mono.just(items)).when(orderItemService).findAll(anyLong(), any(), anyInt(), anyInt());
 
-        mockMvc.perform(get("/main/items"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("text/html;charset=UTF-8"))
+        var result = webTestClient.get().uri("/main/items").exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType("text/html")
+                .expectBody()
+                .returnResult();
+
+        MockMvcWebTestClient.resultActionsFor(result)
                 .andExpect(view().name("main"))
                 .andExpect(model().attributeExists("search"))
                 .andExpect(model().attributeExists("sort"))
@@ -78,14 +78,21 @@ public class MainItemsControllerTest {
         var paging = new Paging(1, 10, false, false);
         Items items = new Items(ItemUi.grouped(List.of(item1, item2)), paging);
 
-        doReturn(order).when(orderService).findNewOrder();
-        doReturn(items).when(orderItemService).findByTitleLikeOrDescriptionLike(anyLong(), any(), any(), anyInt(), anyInt());
+        doReturn(Mono.just(order)).when(orderService).findNewOrder();
+        doReturn(Mono.just(items)).when(orderItemService).findByTitleLikeOrDescriptionLike(anyLong(), any(), any(), anyInt(), anyInt());
 
-        mockMvc.perform(get("/main/items")
-                        .param("search", "tl")
-                        .param("sort", "Price"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("text/html;charset=UTF-8"))
+        var result = webTestClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/main/items")
+                        .queryParam("search", "tl")
+                        .queryParam("sort", "Price").build()
+                )
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType("text/html")
+                .expectBody()
+                .returnResult();
+
+        MockMvcWebTestClient.resultActionsFor(result)
                 .andExpect(view().name("main"))
                 .andExpect(model().attributeExists("search"))
                 .andExpect(model().attributeExists("sort"))
@@ -105,14 +112,19 @@ public class MainItemsControllerTest {
         var paging = new Paging(1, 10, false, false);
         Items items = new Items(ItemUi.grouped(List.of(item1, item2)), paging);
 
-        doReturn(order).when(orderService).findNewOrder();
-        doReturn(items).when(orderItemService).findAll(anyLong(), any(), anyInt(), anyInt());
+        doReturn(Mono.just(order)).when(orderService).findNewOrder();
+        doReturn(Mono.just(items)).when(orderItemService).findAll(anyLong(), any(), anyInt(), anyInt());
 
-        mockMvc.perform(get("/main/items")
-                        .param("pageSize", "10")
-                        .param("pageNumber", "1"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("text/html;charset=UTF-8"))
+        var result = webTestClient.get().uri(uriBuilder -> uriBuilder.path("/main/items")
+                        .queryParam("pageSize", "10")
+                        .queryParam("pageNumber", "1").build())
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType("text/html")
+                .expectBody()
+                .returnResult();
+
+        MockMvcWebTestClient.resultActionsFor(result)
                 .andExpect(view().name("main"))
                 .andExpect(model().attributeExists("search"))
                 .andExpect(model().attributeExists("sort"))
@@ -128,11 +140,17 @@ public class MainItemsControllerTest {
         order.setId(1L);
         order.setStatus(OrderStatus.NEW);
 
-        doReturn(order).when(orderService).findNewOrder();
+        var item = new ItemUi(1L, "title1", "description1", "imgPath1", 1, BigDecimal.valueOf(1.1));
 
-        mockMvc.perform(post("/main/items/1").param("action", "PLUS"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/main/items"));
+        doReturn(Mono.just(order)).when(orderService).findNewOrder();
+        doReturn(Mono.just(item)).when(orderItemService).update(anyLong(), anyLong(), any());
+
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder.path("/main/items/1")
+                        .queryParam("action", "PLUS").build()
+                ).exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueEquals("Location", "/main/items");
 
         verify(orderItemService).update(any(), any(), any());
     }

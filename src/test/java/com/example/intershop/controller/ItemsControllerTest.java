@@ -8,21 +8,20 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(ItemsController.class)
+@WebFluxTest(ItemsController.class)
 public class ItemsControllerTest {
 
     @MockitoBean
@@ -33,7 +32,7 @@ public class ItemsControllerTest {
     private OrderItemService orderItemService;
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebTestClient webTestClient;
 
     @BeforeEach
     void setUp() {
@@ -50,12 +49,16 @@ public class ItemsControllerTest {
 
         var item = new ItemUi(1L, "title1", "description1", "imgPath1", 1, BigDecimal.valueOf(1.1));
 
-        doReturn(order).when(orderService).findNewOrder();
-        doReturn(Optional.of(item)).when(orderItemService).findByOrderIdAndItemId(anyLong(), anyLong());
+        doReturn(Mono.just(order)).when(orderService).findNewOrder();
+        doReturn(Mono.just(item)).when(orderItemService).findByOrderIdAndItemId(anyLong(), anyLong());
 
-        mockMvc.perform(get("/items/1"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("text/html;charset=UTF-8"))
+        var result = webTestClient.get().uri("/items/1").exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType("text/html")
+                .expectBody()
+                .returnResult();
+
+        MockMvcWebTestClient.resultActionsFor(result)
                 .andExpect(view().name("item"))
                 .andExpect(model().attributeExists("item"))
                 .andExpect(xpath("//div/p/img").exists());
@@ -67,11 +70,17 @@ public class ItemsControllerTest {
         order.setId(1L);
         order.setStatus(OrderStatus.NEW);
 
-        doReturn(order).when(orderService).findNewOrder();
+        var item = new ItemUi(1L, "title1", "description1", "imgPath1", 1, BigDecimal.valueOf(1.1));
 
-        mockMvc.perform(post("/items/1").param("action", "PLUS"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/items/1"));
+        doReturn(Mono.just(order)).when(orderService).findNewOrder();
+        doReturn(Mono.just(item)).when(orderItemService).update(anyLong(), anyLong(), any());
+
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder.path("/items/1")
+                        .queryParam("action", "PLUS").build()
+                ).exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueEquals("Location", "/items/1");
 
         verify(orderItemService).update(any(), any(), any());
     }

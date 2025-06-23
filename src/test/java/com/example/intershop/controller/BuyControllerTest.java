@@ -7,25 +7,23 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(BuyController.class)
+@WebFluxTest(BuyController.class)
 public class BuyControllerTest {
 
     @MockitoBean
     private OrderService orderService;
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebTestClient webTestClient;
 
     @BeforeEach
     void setUp() {
@@ -33,16 +31,17 @@ public class BuyControllerTest {
     }
 
     @Test
-    public void testBuy() throws Exception {
+    public void testBuy() {
         Order order = new Order();
         order.setId(1L);
         order.setStatus(OrderStatus.NEW);
 
-        doReturn(order).when(orderService).findNewOrder();
+        doReturn(Mono.just(order)).when(orderService).findNewOrder();
+        doReturn(Mono.just(order)).when(orderService).update(any());
 
-        mockMvc.perform(post("/buy"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/orders/1?newOrder=true"));
+        webTestClient.post().uri("/buy").exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueEquals("Location", "/orders/1?newOrder=true");
 
         verify(orderService).update(any());
     }

@@ -7,20 +7,20 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doReturn;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(OrdersController.class)
+@WebFluxTest(OrdersController.class)
 public class OrdersControllerTest {
 
     @MockitoBean
@@ -29,7 +29,7 @@ public class OrdersControllerTest {
     private OrderItemService orderItemService;
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebTestClient webTestClient;
 
     @BeforeEach
     void setUp() {
@@ -45,12 +45,16 @@ public class OrdersControllerTest {
 
         var item = new ItemUi(1L, "title1", "description1", "imgPath1", 1, BigDecimal.valueOf(1.1));
 
-        doReturn(List.of(order)).when(orderService).findAllNotNew();
-        doReturn(List.of(item)).when(orderItemService).findByOrderId(anyLong());
+        doReturn(Flux.just(order)).when(orderService).findAllNotNew();
+        doReturn(Flux.just(item)).when(orderItemService).findByOrderId(anyLong());
 
-        mockMvc.perform(get("/orders"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("text/html;charset=UTF-8"))
+        var result = webTestClient.get().uri("/orders").exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType("text/html")
+                .expectBody()
+                .returnResult();
+
+        MockMvcWebTestClient.resultActionsFor(result)
                 .andExpect(view().name("orders"))
                 .andExpect(model().attributeExists("orders"))
                 .andExpect(xpath("//table/tr/td/h2/a").exists());
@@ -64,12 +68,16 @@ public class OrdersControllerTest {
 
         var item = new ItemUi(1L, "title1", "description1", "imgPath1", 1, BigDecimal.valueOf(1.1));
 
-        doReturn(Optional.of(order)).when(orderService).findById(anyLong());
-        doReturn(List.of(item)).when(orderItemService).findByOrderId(anyLong());
+        doReturn(Mono.just(order)).when(orderService).findById(anyLong());
+        doReturn(Flux.just(item)).when(orderItemService).findByOrderId(anyLong());
 
-        mockMvc.perform(get("/orders/1"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("text/html;charset=UTF-8"))
+        var result = webTestClient.get().uri("/orders/1").exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType("text/html")
+                .expectBody()
+                .returnResult();
+
+        MockMvcWebTestClient.resultActionsFor(result)
                 .andExpect(view().name("order"))
                 .andExpect(model().attributeExists("order"))
                 .andExpect(model().attributeExists("newOrder"))
@@ -84,12 +92,16 @@ public class OrdersControllerTest {
 
         var item = new ItemUi(1L, "title1", "description1", "imgPath1", 1, BigDecimal.valueOf(1.1));
 
-        doReturn(Optional.of(order)).when(orderService).findById(anyLong());
-        doReturn(List.of(item)).when(orderItemService).findByOrderId(anyLong());
+        doReturn(Mono.just(order)).when(orderService).findById(anyLong());
+        doReturn(Flux.just(item)).when(orderItemService).findByOrderId(anyLong());
 
-        mockMvc.perform(get("/orders/1?newOrder=true"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("text/html;charset=UTF-8"))
+        var result = webTestClient.get().uri("/orders/1?newOrder=true").exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType("text/html")
+                .expectBody()
+                .returnResult();
+
+        MockMvcWebTestClient.resultActionsFor(result)
                 .andExpect(view().name("order"))
                 .andExpect(model().attributeExists("order"))
                 .andExpect(model().attributeExists("newOrder"))

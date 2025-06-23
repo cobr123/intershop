@@ -6,27 +6,25 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
 
 import java.io.File;
 import java.math.BigDecimal;
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doReturn;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(ImageController.class)
+@WebFluxTest(ImageController.class)
 public class ImageControllerTest {
 
     @MockitoBean
     private ItemService itemService;
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebTestClient webTestClient;
 
     @BeforeEach
     void setUp() {
@@ -39,10 +37,10 @@ public class ImageControllerTest {
         tempFile.deleteOnExit();
         var item = new Item(1L, "title1", "description1", tempFile.getAbsolutePath(), BigDecimal.valueOf(1.1));
 
-        doReturn(Optional.of(item)).when(itemService).findById(anyLong());
+        doReturn(Mono.just(item)).when(itemService).findById(anyLong());
 
-        mockMvc.perform(get("/images/1"))
-                .andExpect(status().isOk());
+        webTestClient.get().uri("/images/1").exchange()
+                .expectStatus().isOk();
     }
 
 }

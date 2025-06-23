@@ -7,22 +7,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
-@WebMvcTest(CartItemsController.class)
+@WebFluxTest(CartItemsController.class)
 public class CartItemsControllerTest {
 
     @MockitoBean
@@ -31,7 +31,7 @@ public class CartItemsControllerTest {
     private OrderItemService orderItemService;
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebTestClient webTestClient;
 
     @BeforeEach
     void setUp() {
@@ -47,12 +47,16 @@ public class CartItemsControllerTest {
 
         var item = new ItemUi(1L, "title1", "description1", "imgPath1", 1, BigDecimal.valueOf(1.1));
 
-        doReturn(order).when(orderService).findNewOrder();
-        doReturn(List.of(item)).when(orderItemService).findByOrderId(anyLong());
+        doReturn(Mono.just(order)).when(orderService).findNewOrder();
+        doReturn(Flux.just(item)).when(orderItemService).findByOrderId(anyLong());
 
-        mockMvc.perform(get("/cart/items"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("text/html;charset=UTF-8"))
+        var result = webTestClient.get().uri("/cart/items").exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType("text/html")
+                .expectBody()
+                .returnResult();
+
+        MockMvcWebTestClient.resultActionsFor(result)
                 .andExpect(view().name("cart"))
                 .andExpect(model().attributeExists("items"))
                 .andExpect(model().attributeExists("total"))
@@ -61,18 +65,22 @@ public class CartItemsControllerTest {
     }
 
     @Test
-    public void testCartItemsListAdd() throws Exception {
+    public void testCartItemsListAdd() {
         Order order = new Order();
         order.setId(1L);
         order.setStatus(OrderStatus.NEW);
 
         var item = new ItemUi(1L, "title1", "description1", "imgPath1", 1, BigDecimal.valueOf(1.1));
 
-        doReturn(order).when(orderService).findNewOrder();
+        doReturn(Mono.just(order)).when(orderService).findNewOrder();
+        doReturn(Mono.just(item)).when(orderItemService).update(anyLong(), anyLong(), any());
 
-        mockMvc.perform(post("/cart/items/1").param("action", "Plus"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/cart/items"));
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder.path("/cart/items/1")
+                        .queryParam("action", "Plus").build()
+                ).exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueEquals("Location", "/cart/items");
 
         verify(orderItemService).update(anyLong(), anyLong(), any());
     }

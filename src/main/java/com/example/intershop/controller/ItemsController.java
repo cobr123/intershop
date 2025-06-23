@@ -2,8 +2,6 @@ package com.example.intershop.controller;
 
 import com.example.intershop.model.Item;
 import com.example.intershop.model.ItemAction;
-import com.example.intershop.model.ItemUi;
-import com.example.intershop.model.Order;
 import com.example.intershop.service.ItemService;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
@@ -13,6 +11,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,62 +38,64 @@ public class ItemsController {
     }
 
     @GetMapping("/{id}")
-    public String getItem(Model model, @PathVariable("id") Long itemId) {
-        var order = orderService.findNewOrder();
-        ItemUi itemUi = orderItemService.findByOrderIdAndItemId(order.getId(), itemId).orElseThrow();
-        model.addAttribute("item", itemUi);
-
-        return "item";
+    public Mono<String> getItem(Model model, @PathVariable("id") Long itemId) {
+        return orderService.findNewOrder()
+                .flatMap(order -> orderItemService.findByOrderIdAndItemId(order.getId(), itemId))
+                .map(itemUi -> model.addAttribute("item", itemUi))
+                .thenReturn("item");
     }
 
     @PostMapping("/{id}")
-    public String update(@PathVariable("id") Long itemId, @RequestParam("action") ItemAction action) {
-        Order order = orderService.findNewOrder();
-        orderItemService.update(order.getId(), itemId, action);
-
-        return "redirect:/items/" + itemId;
+    public Mono<String> update(@PathVariable("id") Long itemId, @RequestParam("action") ItemAction action) {
+        return orderService.findNewOrder()
+                .flatMap(order -> orderItemService.update(order.getId(), itemId, action))
+                .thenReturn("redirect:/items/" + itemId);
     }
 
     @GetMapping("/add")
-    public String getForm() {
-        return "add-item";
+    public Mono<String> getForm() {
+        return Mono.just("add-item");
     }
 
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public String insert(@RequestParam("title") String title, @RequestParam("description") String description, @RequestParam("image") MultipartFile image, @RequestParam("price") BigDecimal price) throws IOException {
-        Item item = new Item();
+    public Mono<String> insert(@RequestParam("title") String title, @RequestParam("description") String description, @RequestParam("image") MultipartFile image, @RequestParam("price") BigDecimal price) throws IOException {
+        return Mono.fromCallable(() -> {
+                    Item item = new Item();
 
-        if (image != null) {
-            File imageFile = new File(image_dir, UUID.randomUUID().toString());
-            Files.write(imageFile.toPath(), image.getBytes());
-            item.setImgPath(imageFile.getAbsolutePath());
-        }
+                    if (image != null) {
+                        File imageFile = new File(image_dir, UUID.randomUUID().toString());
+                        Files.write(imageFile.toPath(), image.getBytes());
+                        item.setImgPath(imageFile.getAbsolutePath());
+                    }
 
-        item.setTitle(title);
-        item.setDescription(description);
-        item.setPrice(price);
-        Item insertedItem = itemService.insert(item);
-
-        return "redirect:/items/" + insertedItem.getId();
+                    item.setTitle(title);
+                    item.setDescription(description);
+                    item.setPrice(price);
+                    return item;
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(itemService::insert)
+                .map(insertedItem -> "redirect:/items/" + insertedItem.getId());
     }
 
     @PostMapping(value = "/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public String update(@PathVariable("id") Long id, @RequestParam("title") String title, @RequestParam("description") String description, @RequestParam("image") MultipartFile image, @RequestParam("price") BigDecimal price) throws IOException {
-        Item item = itemService.findById(id).orElseThrow();
-
-        if (image != null) {
-            if (!item.getImgPath().isEmpty()) {
-                new File(item.getImgPath()).delete();
-            }
-            File imageFile = new File(image_dir, UUID.randomUUID().toString());
-            Files.write(imageFile.toPath(), image.getBytes());
-            item.setImgPath(imageFile.getAbsolutePath());
-        }
-        item.setTitle(title);
-        item.setDescription(description);
-        item.setPrice(price);
-        Item updatedItem = itemService.update(item);
-
-        return "redirect:/items/" + updatedItem.getId();
+    public Mono<String> update(@PathVariable("id") Long id, @RequestParam("title") String title, @RequestParam("description") String description, @RequestParam("image") MultipartFile image, @RequestParam("price") BigDecimal price) throws IOException {
+        return itemService.findById(id)
+                .flatMap(item -> Mono.fromCallable(() -> {
+                    if (image != null) {
+                        if (!item.getImgPath().isEmpty()) {
+                            new File(item.getImgPath()).delete();
+                        }
+                        File imageFile = new File(image_dir, UUID.randomUUID().toString());
+                        Files.write(imageFile.toPath(), image.getBytes());
+                        item.setImgPath(imageFile.getAbsolutePath());
+                    }
+                    item.setTitle(title);
+                    item.setDescription(description);
+                    item.setPrice(price);
+                    return item;
+                }).subscribeOn(Schedulers.boundedElastic()))
+                .flatMap(itemService::update)
+                .map(updatedItem -> "redirect:/items/" + updatedItem.getId());
     }
 }

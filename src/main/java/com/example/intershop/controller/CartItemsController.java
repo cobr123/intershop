@@ -3,11 +3,11 @@ package com.example.intershop.controller;
 import com.example.intershop.model.*;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import reactor.core.publisher.Mono;
 
 @Controller
 @RequestMapping("/cart/items")
@@ -22,23 +22,28 @@ public class CartItemsController {
     }
 
     @GetMapping
-    public String getOrderItems(Model model) {
-        Order order = orderService.findNewOrder();
-        List<ItemUi> items = orderItemService.findByOrderId(order.getId());
-        OrderUi orderUi = new OrderUi(order.getId(), items);
-        model.addAttribute("items", items);
-        model.addAttribute("total", orderUi.totalSum());
-        model.addAttribute("empty", items.isEmpty());
-
-        return "cart";
+    public Mono<String> getOrderItems(Model model) {
+        return orderService.findNewOrder()
+                .flatMap(order -> orderItemService.findByOrderId(order.getId())
+                        .collectList()
+                        .map(items -> Pair.of(order.getId(), items))
+                )
+                .map(pair -> {
+                    var orderId = pair.getFirst();
+                    var items = pair.getSecond();
+                    OrderUi orderUi = new OrderUi(orderId, items);
+                    model.addAttribute("items", items);
+                    model.addAttribute("total", orderUi.totalSum());
+                    model.addAttribute("empty", items.isEmpty());
+                    return "cart";
+                });
     }
 
     @PostMapping("/{id}")
-    public String update(@PathVariable("id") Long itemId, @RequestParam("action") ItemAction action) {
-        Order order = orderService.findNewOrder();
-        orderItemService.update(order.getId(), itemId, action);
-
-        return "redirect:/cart/items";
+    public Mono<String> update(@PathVariable("id") Long itemId, @RequestParam("action") ItemAction action) {
+        return orderService.findNewOrder()
+                .flatMap(order -> orderItemService.update(order.getId(), itemId, action))
+                .thenReturn("redirect:/cart/items");
     }
 
 }

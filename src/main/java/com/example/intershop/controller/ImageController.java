@@ -6,8 +6,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -23,8 +24,8 @@ public class ImageController {
 
     @GetMapping("/{id}")
     @ResponseBody
-    public byte[] get(@PathVariable("id") Long id) throws IOException {
-        var item = itemService.findById(id).orElseThrow();
-        return Files.readAllBytes(Paths.get(item.getImgPath()));
+    public Mono<byte[]> get(@PathVariable("id") Long id) {
+        return itemService.findById(id)
+                .flatMap(item -> Mono.fromCallable(() -> Files.readAllBytes(Paths.get(item.getImgPath()))).subscribeOn(Schedulers.boundedElastic()));
     }
 }

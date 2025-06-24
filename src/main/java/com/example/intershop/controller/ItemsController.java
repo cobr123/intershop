@@ -1,13 +1,12 @@
 package com.example.intershop.controller;
 
 import com.example.intershop.model.AddItemForm;
+import com.example.intershop.model.ChangeCountForm;
 import com.example.intershop.model.Item;
-import com.example.intershop.model.ItemAction;
 import com.example.intershop.service.ItemService;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -16,7 +15,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.UUID;
 
 @Controller
@@ -45,9 +43,9 @@ public class ItemsController {
     }
 
     @PostMapping("/{id}")
-    public Mono<String> update(@PathVariable("id") Long itemId, @RequestParam("action") ItemAction action) {
+    public Mono<String> update(@PathVariable("id") Long itemId, ChangeCountForm changeCountForm) {
         return orderService.findNewOrder()
-                .flatMap(order -> orderItemService.update(order.getId(), itemId, action))
+                .flatMap(order -> orderItemService.update(order.getId(), itemId, changeCountForm.getAction()))
                 .thenReturn("redirect:/items/" + itemId);
     }
 

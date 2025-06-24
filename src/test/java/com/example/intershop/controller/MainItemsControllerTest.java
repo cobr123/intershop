@@ -135,7 +135,7 @@ public class MainItemsControllerTest {
 
 
     @Test
-    public void testMainItemsListAdd() throws Exception {
+    public void testMainItemsListAdd() {
         Order order = new Order();
         order.setId(1L);
         order.setStatus(OrderStatus.NEW);

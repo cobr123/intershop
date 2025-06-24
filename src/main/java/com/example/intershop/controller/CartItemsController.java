@@ -40,9 +40,9 @@ public class CartItemsController {
     }
 
     @PostMapping("/{id}")
-    public Mono<String> update(@PathVariable("id") Long itemId, @RequestParam("action") ItemAction action) {
+    public Mono<String> update(@PathVariable("id") Long itemId, ChangeCountForm changeCountForm) {
         return orderService.findNewOrder()
-                .flatMap(order -> orderItemService.update(order.getId(), itemId, action))
+                .flatMap(order -> orderItemService.update(order.getId(), itemId, changeCountForm.getAction()))
                 .thenReturn("redirect:/cart/items");
     }
 

@@ -64,34 +64,31 @@ public class OrderItemService {
         return (pageNumber - 1) * pageSize;
     }
 
-    public Mono<Void> update(Long orderId, Long itemId, ItemAction action) {
+    public Mono<OrderItem> update(Long orderId, Long itemId, ItemAction action) {
         return orderItemRepository.findOrderItemByOrderIdAndItemId(orderId, itemId)
-                .flatMap(orderItem -> {
-                            switch (action) {
-                                case PLUS -> {
-                                    orderItem.setCount(orderItem.getCount() + 1);
-                                    return update(orderItem);
-                                }
-                                case MINUS -> {
-                                    if (orderItem.getCount() > 1) {
-                                        orderItem.setCount(orderItem.getCount() - 1);
-                                        return update(orderItem);
-                                    } else {
-                                        return deleteById(orderItem.getId());
-                                    }
-                                }
-                                case DELETE -> {
-                                    return deleteById(orderItem.getId());
-                                }
-                            }
-                            return null;
-                        }
-                ).switchIfEmpty(Mono.fromCallable(() ->
-                        switch (action) {
-                            case PLUS -> insert(new OrderItem(orderId, itemId, 1));
-                            case MINUS, DELETE -> null;
-                        }))
-                .then();
+                .flatMap(orderItem -> update(orderItem, action))
+                .switchIfEmpty(insert(new OrderItem(orderId, itemId, 1)));
+    }
+
+    public Mono<OrderItem> update(OrderItem orderItem, ItemAction action) {
+        switch (action) {
+            case PLUS -> {
+                orderItem.setCount(orderItem.getCount() + 1);
+                return update(orderItem);
+            }
+            case MINUS -> {
+                if (orderItem.getCount() > 1) {
+                    orderItem.setCount(orderItem.getCount() - 1);
+                    return update(orderItem);
+                } else {
+                    return deleteById(orderItem.getId()).thenReturn(orderItem);
+                }
+            }
+            case DELETE -> {
+                return deleteById(orderItem.getId()).thenReturn(orderItem);
+            }
+        }
+        throw new IllegalArgumentException("action = " + action);
     }
 
     public Mono<OrderItem> insert(OrderItem orderItem) {

@@ -3,7 +3,7 @@ package com.example.intershop.controller;
 import com.example.intershop.model.*;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -22,24 +22,18 @@ public class MainItemsController {
     }
 
     @GetMapping
-    public Mono<String> getAll(
-            Model model,
-            @RequestParam(required = false, defaultValue = "", name = "search") String search,
-            @RequestParam(required = false, defaultValue = "NO", name = "sort") ItemSort itemSort,
-            @RequestParam(required = false, defaultValue = "10", name = "pageSize") @Min(1) int pageSize,
-            @RequestParam(required = false, defaultValue = "1", name = "pageNumber") @Min(1) int pageNumber
-    ) {
+    public Mono<String> getAll(Model model, @Valid SearchForm searchForm) {
         return orderService.findNewOrder()
                 .flatMap(order -> {
-                    if (search.isBlank()) {
-                        return orderItemService.findAll(order.getId(), itemSort, pageSize, pageNumber);
+                    if (searchForm.getSearch().isBlank()) {
+                        return orderItemService.findAll(order.getId(), searchForm.getItemSort(), searchForm.getPageSize(), searchForm.getPageNumber());
                     } else {
-                        return orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), search, itemSort, pageSize, pageNumber);
+                        return orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), searchForm.getSearch(), searchForm.getItemSort(), searchForm.getPageSize(), searchForm.getPageNumber());
                     }
                 })
                 .map(items -> {
-                    model.addAttribute("search", search);
-                    model.addAttribute("sort", itemSort.name());
+                    model.addAttribute("search", searchForm.getSearch());
+                    model.addAttribute("sort", searchForm.getItemSort().name());
                     model.addAttribute("items", items.items());
                     model.addAttribute("paging", items.paging());
 

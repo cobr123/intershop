@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -18,7 +17,6 @@ import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 
-import java.io.File;
 import java.math.BigDecimal;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -70,7 +68,7 @@ public class ItemsControllerTest {
     }
 
     @Test
-    public void testAddItemToCart() throws Exception {
+    public void testAddItemToCart() {
         Order order = new Order();
         order.setId(1L);
         order.setStatus(OrderStatus.NEW);
@@ -91,26 +89,18 @@ public class ItemsControllerTest {
     }
 
     @Test
-    public void testInsertItem() throws Exception {
-        Order order = new Order();
-        order.setId(1L);
-        order.setStatus(OrderStatus.NEW);
-
+    public void testInsertItem() {
         var item = new Item(1L, "1", "1", "", BigDecimal.valueOf(1));
 
         doReturn(Mono.just(item)).when(itemService).insert(any());
 
-        File fileToUpload = new File("src/test/resources/application-test.properties");
         MultipartBodyBuilder builder = new MultipartBodyBuilder();
-        builder.part("image", new FileSystemResource(fileToUpload)).filename(fileToUpload.getName());
+        builder.part("title", "title");
+        builder.part("description", "description");
+        builder.part("price", BigDecimal.valueOf(1));
 
         webTestClient.post()
-                .uri(uriBuilder -> uriBuilder.path("/items")
-                        .queryParam("title", "title")
-                        .queryParam("description", "description")
-                        .queryParam("price", "1")
-                        .build()
-                )
+                .uri("/items")
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(BodyInserters.fromMultipartData(builder.build()))
                 .exchange()
@@ -118,5 +108,28 @@ public class ItemsControllerTest {
                 .expectHeader().valueEquals("Location", "/items/1");
 
         verify(itemService).insert(any());
+    }
+
+    @Test
+    public void testUpdateItem() {
+        var item = new Item(1L, "1", "1", "", BigDecimal.valueOf(1));
+
+        doReturn(Mono.just(item)).when(itemService).findById(any());
+        doReturn(Mono.just(item)).when(itemService).update(any());
+
+        MultipartBodyBuilder builder = new MultipartBodyBuilder();
+        builder.part("title", "title");
+        builder.part("description", "description");
+        builder.part("price", BigDecimal.valueOf(1));
+
+        webTestClient.post()
+                .uri("/items/1")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(builder.build()))
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueEquals("Location", "/items/1");
+
+        verify(itemService).update(any());
     }
 }

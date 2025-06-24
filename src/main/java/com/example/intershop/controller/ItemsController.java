@@ -1,5 +1,6 @@
 package com.example.intershop.controller;
 
+import com.example.intershop.model.AddItemForm;
 import com.example.intershop.model.Item;
 import com.example.intershop.model.ItemAction;
 import com.example.intershop.service.ItemService;
@@ -9,15 +10,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.nio.file.Files;
 import java.util.UUID;
 
 @Controller
@@ -58,19 +57,19 @@ public class ItemsController {
     }
 
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public Mono<String> insert(@RequestParam("title") String title, @RequestParam("description") String description, @RequestParam(value = "image", required = false) MultipartFile image, @RequestParam("price") BigDecimal price) throws IOException {
+    public Mono<String> insert(AddItemForm addItemForm, BindingResult errors) {
         return Mono.fromCallable(() -> {
                     Item item = new Item();
 
-                    if (image != null) {
+                    if (addItemForm.getImage() != null) {
                         File imageFile = new File(image_dir, UUID.randomUUID().toString());
-                        Files.write(imageFile.toPath(), image.getBytes());
+                        addItemForm.getImage().transferTo(imageFile.toPath());
                         item.setImgPath(imageFile.getAbsolutePath());
                     }
 
-                    item.setTitle(title);
-                    item.setDescription(description);
-                    item.setPrice(price);
+                    item.setTitle(addItemForm.getTitle());
+                    item.setDescription(addItemForm.getDescription());
+                    item.setPrice(addItemForm.getPrice());
                     return item;
                 })
                 .subscribeOn(Schedulers.boundedElastic())
@@ -79,20 +78,20 @@ public class ItemsController {
     }
 
     @PostMapping(value = "/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public Mono<String> update(@PathVariable("id") Long id, @RequestParam("title") String title, @RequestParam("description") String description, @RequestParam(value = "image", required = false) MultipartFile image, @RequestParam("price") BigDecimal price) throws IOException {
+    public Mono<String> update(@PathVariable("id") Long id, AddItemForm addItemForm, BindingResult errors) throws IOException {
         return itemService.findById(id)
                 .flatMap(item -> Mono.fromCallable(() -> {
-                    if (image != null) {
+                    if (addItemForm.getImage() != null) {
                         if (!item.getImgPath().isEmpty()) {
                             new File(item.getImgPath()).delete();
                         }
                         File imageFile = new File(image_dir, UUID.randomUUID().toString());
-                        Files.write(imageFile.toPath(), image.getBytes());
+                        addItemForm.getImage().transferTo(imageFile.toPath());
                         item.setImgPath(imageFile.getAbsolutePath());
                     }
-                    item.setTitle(title);
-                    item.setDescription(description);
-                    item.setPrice(price);
+                    item.setTitle(addItemForm.getTitle());
+                    item.setDescription(addItemForm.getDescription());
+                    item.setPrice(addItemForm.getPrice());
                     return item;
                 }).subscribeOn(Schedulers.boundedElastic()))
                 .flatMap(itemService::update)

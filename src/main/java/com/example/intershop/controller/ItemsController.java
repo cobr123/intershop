@@ -56,7 +56,7 @@ public class ItemsController {
         return Mono.just("add-item");
     }
 
-    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping
     public Mono<String> insert(AddItemForm addItemForm, BindingResult errors) {
         return Mono.fromCallable(() -> {
                     Item item = new Item();
@@ -77,24 +77,4 @@ public class ItemsController {
                 .map(insertedItem -> "redirect:/items/" + insertedItem.getId());
     }
 
-    @PostMapping(value = "/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public Mono<String> update(@PathVariable("id") Long id, AddItemForm addItemForm, BindingResult errors) throws IOException {
-        return itemService.findById(id)
-                .flatMap(item -> Mono.fromCallable(() -> {
-                    if (addItemForm.getImage() != null) {
-                        if (!item.getImgPath().isEmpty()) {
-                            new File(item.getImgPath()).delete();
-                        }
-                        File imageFile = new File(image_dir, UUID.randomUUID().toString());
-                        addItemForm.getImage().transferTo(imageFile.toPath());
-                        item.setImgPath(imageFile.getAbsolutePath());
-                    }
-                    item.setTitle(addItemForm.getTitle());
-                    item.setDescription(addItemForm.getDescription());
-                    item.setPrice(addItemForm.getPrice());
-                    return item;
-                }).subscribeOn(Schedulers.boundedElastic()))
-                .flatMap(itemService::update)
-                .map(updatedItem -> "redirect:/items/" + updatedItem.getId());
-    }
 }

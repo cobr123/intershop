@@ -110,26 +110,4 @@ public class ItemsControllerTest {
         verify(itemService).insert(any());
     }
 
-    @Test
-    public void testUpdateItem() {
-        var item = new Item(1L, "1", "1", "", BigDecimal.valueOf(1));
-
-        doReturn(Mono.just(item)).when(itemService).findById(any());
-        doReturn(Mono.just(item)).when(itemService).update(any());
-
-        MultipartBodyBuilder builder = new MultipartBodyBuilder();
-        builder.part("title", "title");
-        builder.part("description", "description");
-        builder.part("price", BigDecimal.valueOf(1));
-
-        webTestClient.post()
-                .uri("/items/1")
-                .contentType(MediaType.MULTIPART_FORM_DATA)
-                .body(BodyInserters.fromMultipartData(builder.build()))
-                .exchange()
-                .expectStatus().is3xxRedirection()
-                .expectHeader().valueEquals("Location", "/items/1");
-
-        verify(itemService).update(any());
-    }
 }

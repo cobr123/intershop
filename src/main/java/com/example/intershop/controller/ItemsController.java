@@ -61,7 +61,7 @@ public class ItemsController {
 
                     if (addItemForm.getImage() != null) {
                         File imageFile = new File(image_dir, UUID.randomUUID().toString());
-                        addItemForm.getImage().transferTo(imageFile.toPath());
+                        addItemForm.getImage().transferTo(imageFile.toPath()).block();
                         item.setImgPath(imageFile.getAbsolutePath());
                     }
 

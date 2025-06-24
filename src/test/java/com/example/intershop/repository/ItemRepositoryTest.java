@@ -1,15 +1,16 @@
 package com.example.intershop.repository;
 
 import com.example.intershop.IntershopApplicationTests;
+import com.example.intershop.Transaction;
 import com.example.intershop.model.Item;
 import com.example.intershop.service.ItemService;
 import org.junit.Test;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringRunner;
+import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
 
@@ -26,29 +27,35 @@ public class ItemRepositoryTest {
     @Autowired
     private ItemService itemService;
 
-    @BeforeEach
-    void setUp() {
-        itemRepository.deleteAll().block();
-    }
-
     @Test
     public void testCreate() {
-        var item = itemService.insert(new Item("title", BigDecimal.valueOf(2.5))).block();
-
-        assertThat(item)
-                .isNotNull()
-                .withFailMessage("Созданной записи должен был быть присвоен ID")
-                .extracting(Item::getId)
-                .isNotNull();
+        itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
+                .as(Transaction::withRollback)
+                .as(StepVerifier::create)
+                .assertNext(item -> {
+                    assertThat(item)
+                            .isNotNull()
+                            .withFailMessage("Созданной записи должен был быть присвоен ID")
+                            .extracting(Item::getId)
+                            .isNotNull();
+                })
+                .verifyComplete();
     }
 
     @Test
     public void testDelete() {
-        var item = itemService.insert(new Item("title", BigDecimal.valueOf(2.5))).block();
-        itemService.deleteById(item.getId()).block();
+        itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
+                .flatMap(item -> itemService.deleteById(item.getId()).thenReturn(item))
+                .flatMap(item -> itemRepository.existsById(item.getId()))
+                .as(Transaction::withRollback)
+                .as(StepVerifier::create)
+                .assertNext(exists -> {
+                    assertThat(exists)
+                            .withFailMessage("Удалённая запись не должна быть найдена")
+                            .isFalse();
+                })
+                .verifyComplete();
 
-        assertThat(itemRepository.existsById(item.getId()).block())
-                .withFailMessage("Удалённая запись не должна быть найдена")
-                .isFalse();
+
     }
 }

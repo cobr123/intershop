@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -19,8 +18,6 @@ import java.math.BigDecimal;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
 @WebFluxTest(CartItemsController.class)
 public class CartItemsControllerTest {
@@ -50,18 +47,11 @@ public class CartItemsControllerTest {
         doReturn(Mono.just(order)).when(orderService).findNewOrder();
         doReturn(Flux.just(item)).when(orderItemService).findByOrderId(anyLong());
 
-        var result = webTestClient.get().uri("/cart/items").exchange()
+        webTestClient.get().uri("/cart/items").exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType("text/html")
                 .expectBody()
-                .returnResult();
-
-        MockMvcWebTestClient.resultActionsFor(result)
-                .andExpect(view().name("cart"))
-                .andExpect(model().attributeExists("items"))
-                .andExpect(model().attributeExists("total"))
-                .andExpect(model().attributeExists("empty"))
-                .andExpect(xpath("//table/tr/td/table/tr/td/img").exists());
+                .xpath("//table/tr/td/table/tr/td/img").exists();
     }
 
     @Test

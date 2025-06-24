@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -18,7 +17,6 @@ import java.math.BigDecimal;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doReturn;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebFluxTest(OrdersController.class)
 public class OrdersControllerTest {
@@ -48,16 +46,11 @@ public class OrdersControllerTest {
         doReturn(Flux.just(order)).when(orderService).findAllNotNew();
         doReturn(Flux.just(item)).when(orderItemService).findByOrderId(anyLong());
 
-        var result = webTestClient.get().uri("/orders").exchange()
+        webTestClient.get().uri("/orders").exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType("text/html")
                 .expectBody()
-                .returnResult();
-
-        MockMvcWebTestClient.resultActionsFor(result)
-                .andExpect(view().name("orders"))
-                .andExpect(model().attributeExists("orders"))
-                .andExpect(xpath("//table/tr/td/h2/a").exists());
+                .xpath("//table/tr/td/h2/a").exists();
     }
 
     @Test
@@ -71,17 +64,11 @@ public class OrdersControllerTest {
         doReturn(Mono.just(order)).when(orderService).findById(anyLong());
         doReturn(Flux.just(item)).when(orderItemService).findByOrderId(anyLong());
 
-        var result = webTestClient.get().uri("/orders/1").exchange()
+        webTestClient.get().uri("/orders/1").exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType("text/html")
                 .expectBody()
-                .returnResult();
-
-        MockMvcWebTestClient.resultActionsFor(result)
-                .andExpect(view().name("order"))
-                .andExpect(model().attributeExists("order"))
-                .andExpect(model().attributeExists("newOrder"))
-                .andExpect(xpath("//table/tr/td/h2").exists());
+                .xpath("//table/tr/td/h2").exists();
     }
 
     @Test
@@ -95,17 +82,11 @@ public class OrdersControllerTest {
         doReturn(Mono.just(order)).when(orderService).findById(anyLong());
         doReturn(Flux.just(item)).when(orderItemService).findByOrderId(anyLong());
 
-        var result = webTestClient.get().uri("/orders/1?newOrder=true").exchange()
+        webTestClient.get().uri("/orders/1?newOrder=true").exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType("text/html")
                 .expectBody()
-                .returnResult();
-
-        MockMvcWebTestClient.resultActionsFor(result)
-                .andExpect(view().name("order"))
-                .andExpect(model().attributeExists("order"))
-                .andExpect(model().attributeExists("newOrder"))
-                .andExpect(xpath("//table/tr/td/h2").exists());
+                .xpath("//table/tr/td/h2").exists();
     }
 
 }

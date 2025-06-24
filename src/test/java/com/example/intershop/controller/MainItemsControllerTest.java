@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
@@ -19,7 +18,6 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebFluxTest(MainItemsController.class)
 public class MainItemsControllerTest {
@@ -52,19 +50,11 @@ public class MainItemsControllerTest {
         doReturn(Mono.just(order)).when(orderService).findNewOrder();
         doReturn(Mono.just(items)).when(orderItemService).findAll(anyLong(), any(), anyInt(), anyInt());
 
-        var result = webTestClient.get().uri("/main/items").exchange()
+        webTestClient.get().uri("/main/items").exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType("text/html")
                 .expectBody()
-                .returnResult();
-
-        MockMvcWebTestClient.resultActionsFor(result)
-                .andExpect(view().name("main"))
-                .andExpect(model().attributeExists("search"))
-                .andExpect(model().attributeExists("sort"))
-                .andExpect(model().attributeExists("items"))
-                .andExpect(model().attributeExists("paging"))
-                .andExpect(xpath("//table/tr/td/table/tr/td/a").exists());
+                .xpath("//table/tr/td/table/tr/td/a").exists();
     }
 
     @Test
@@ -90,15 +80,7 @@ public class MainItemsControllerTest {
                 .expectStatus().isOk()
                 .expectHeader().contentType("text/html")
                 .expectBody()
-                .returnResult();
-
-        MockMvcWebTestClient.resultActionsFor(result)
-                .andExpect(view().name("main"))
-                .andExpect(model().attributeExists("search"))
-                .andExpect(model().attributeExists("sort"))
-                .andExpect(model().attributeExists("items"))
-                .andExpect(model().attributeExists("paging"))
-                .andExpect(xpath("//table/tr/td/table/tr/td/a").exists());
+                .xpath("//table/tr/td/table/tr/td/a").exists();
     }
 
     @Test
@@ -115,22 +97,14 @@ public class MainItemsControllerTest {
         doReturn(Mono.just(order)).when(orderService).findNewOrder();
         doReturn(Mono.just(items)).when(orderItemService).findAll(anyLong(), any(), anyInt(), anyInt());
 
-        var result = webTestClient.get().uri(uriBuilder -> uriBuilder.path("/main/items")
+        webTestClient.get().uri(uriBuilder -> uriBuilder.path("/main/items")
                         .queryParam("pageSize", "10")
                         .queryParam("pageNumber", "1").build())
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType("text/html")
                 .expectBody()
-                .returnResult();
-
-        MockMvcWebTestClient.resultActionsFor(result)
-                .andExpect(view().name("main"))
-                .andExpect(model().attributeExists("search"))
-                .andExpect(model().attributeExists("sort"))
-                .andExpect(model().attributeExists("items"))
-                .andExpect(model().attributeExists("paging"))
-                .andExpect(xpath("//table/tr/td/table/tr/td/a").exists());
+                .xpath("//table/tr/td/table/tr/td/a").exists();
     }
 
 

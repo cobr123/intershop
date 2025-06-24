@@ -13,7 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 
@@ -22,7 +21,6 @@ import java.math.BigDecimal;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebFluxTest(ItemsController.class)
 public class ItemsControllerTest {
@@ -55,16 +53,11 @@ public class ItemsControllerTest {
         doReturn(Mono.just(order)).when(orderService).findNewOrder();
         doReturn(Mono.just(item)).when(orderItemService).findByOrderIdAndItemId(anyLong(), anyLong());
 
-        var result = webTestClient.get().uri("/items/1").exchange()
+        webTestClient.get().uri("/items/1").exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType("text/html")
                 .expectBody()
-                .returnResult();
-
-        MockMvcWebTestClient.resultActionsFor(result)
-                .andExpect(view().name("item"))
-                .andExpect(model().attributeExists("item"))
-                .andExpect(xpath("//div/p/img").exists());
+                .xpath("//div/p/img").exists();
     }
 
     @Test

@@ -58,7 +58,7 @@ public class ItemsController {
     }
 
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public Mono<String> insert(@RequestParam("title") String title, @RequestParam("description") String description, @RequestParam("image") MultipartFile image, @RequestParam("price") BigDecimal price) throws IOException {
+    public Mono<String> insert(@RequestParam("title") String title, @RequestParam("description") String description, @RequestParam(value = "image", required = false) MultipartFile image, @RequestParam("price") BigDecimal price) throws IOException {
         return Mono.fromCallable(() -> {
                     Item item = new Item();
 
@@ -79,7 +79,7 @@ public class ItemsController {
     }
 
     @PostMapping(value = "/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public Mono<String> update(@PathVariable("id") Long id, @RequestParam("title") String title, @RequestParam("description") String description, @RequestParam("image") MultipartFile image, @RequestParam("price") BigDecimal price) throws IOException {
+    public Mono<String> update(@PathVariable("id") Long id, @RequestParam("title") String title, @RequestParam("description") String description, @RequestParam(value = "image", required = false) MultipartFile image, @RequestParam("price") BigDecimal price) throws IOException {
         return itemService.findById(id)
                 .flatMap(item -> Mono.fromCallable(() -> {
                     if (image != null) {

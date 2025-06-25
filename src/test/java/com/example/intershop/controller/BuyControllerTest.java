@@ -12,7 +12,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
@@ -36,14 +35,13 @@ public class BuyControllerTest {
         order.setId(1L);
         order.setStatus(OrderStatus.NEW);
 
-        doReturn(Mono.just(order)).when(orderService).findNewOrder();
-        doReturn(Mono.just(order)).when(orderService).update(any());
+        doReturn(Mono.just(order)).when(orderService).changeNewStatusToGathering();
 
         webTestClient.post().uri("/buy").exchange()
                 .expectStatus().is3xxRedirection()
                 .expectHeader().valueEquals("Location", "/orders/1?newOrder=true");
 
-        verify(orderService).update(any());
+        verify(orderService).changeNewStatusToGathering();
     }
 
 }

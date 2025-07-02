@@ -1,6 +1,7 @@
 package com.example.intershop;
 
 import com.example.intershop.config.PostgreSqlTestContainer;
+import com.example.intershop.config.RedisTestContainer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.test.context.ActiveProfiles;
@@ -11,7 +12,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest
 @Testcontainers
-@ImportTestcontainers(PostgreSqlTestContainer.class)
+@ImportTestcontainers({PostgreSqlTestContainer.class, RedisTestContainer.class})
 @ActiveProfiles("test")
 public class IntershopApplicationTests {
 

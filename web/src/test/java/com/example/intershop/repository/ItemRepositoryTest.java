@@ -13,6 +13,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -46,16 +47,20 @@ public class ItemRepositoryTest {
     public void testDelete() {
         itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
                 .flatMap(item -> itemService.deleteById(item.getId()).thenReturn(item))
-                .flatMap(item -> itemRepository.existsById(item.getId()))
+                .flatMap(item -> itemRepository.existsById(item.getId())
+                        .zipWith(itemService.findById(item.getId())
+                                .map(Optional::of)
+                                .defaultIfEmpty(Optional.empty())))
                 .as(Transaction::withRollback)
                 .as(StepVerifier::create)
-                .assertNext(exists -> {
-                    assertThat(exists)
+                .assertNext(pair -> {
+                    assertThat(pair.getT1())
                             .withFailMessage("Удалённая запись не должна быть найдена")
                             .isFalse();
+                    assertThat(pair.getT2().isEmpty())
+                            .withFailMessage("Удалённая запись не должна быть найдена в кеше")
+                            .isTrue();
                 })
                 .verifyComplete();
-
-
     }
 }

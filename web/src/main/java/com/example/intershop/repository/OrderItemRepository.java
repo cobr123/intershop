@@ -27,4 +27,6 @@ public interface OrderItemRepository extends ReactiveCrudRepository<OrderItem, L
 
     @Query("select count(*) from items i left join order_items oi on oi.item_id = i.id and oi.order_id = :orderId where (i.title like :title or i.description like :description)")
     Mono<Long> countByOrderIdAndTitleLikeOrDescriptionLike(Long orderId, String title, String description);
+
+    Mono<Void> deleteByOrderId(Long orderId);
 }

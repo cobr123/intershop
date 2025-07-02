@@ -49,7 +49,7 @@ public class OrderService {
     }
 
     public Mono<Void> deleteById(Long id) {
-        return orderItemRepository.deleteById(id)
+        return orderItemRepository.deleteByOrderId(id)
                 .then(orderRepository.deleteById(id));
     }
 }

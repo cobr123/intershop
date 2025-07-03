@@ -9,12 +9,22 @@ services:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
 
+  cache:
+    image: redis:8-alpine
+
+  rest:
+    build: ./rest # https://github.com/cobr123/intershop/rest
+    ports:
+      - '8081:8080'
+
   web:
     build: ./web # https://github.com/cobr123/intershop/web
     ports:
       - '8080:8080'
     depends_on:
       - db
+      - cache
+      - rest
     environment:
       - DB_NAME=intershop
       - POSTGRES_USER=root
@@ -27,14 +37,8 @@ services:
       - spring.liquibase.url=jdbc:postgresql://db:5432/intershop
       - spring.liquibase.username=root
       - spring.liquibase.password=root
-
-  rest:
-    build: ./rest # https://github.com/cobr123/intershop/rest
-    ports:
-      - '8081:8080'
-    depends_on:
-      - db
-    environment:
-      - spring.r2dbc.url=r2dbc:postgresql://db:5432/intershop
-      - spring.r2dbc.username=root
-      - spring.r2dbc.password=root
+      - spring.data.redis.host=cache
+      - spring.data.redis.port=6379
+      - spring.cache.redis.time-to-live=PT5S
+      - REST_HOST=rest
+      - REST_PORT=8080

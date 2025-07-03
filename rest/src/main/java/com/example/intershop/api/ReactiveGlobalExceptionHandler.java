@@ -1,4 +1,4 @@
-package com.example.intershop;
+package com.example.intershop.api;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

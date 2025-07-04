@@ -17,6 +17,8 @@ paths:
                   balance:
                     type: number
                     format: bigdecimal
+                required:
+                  - balance
     post:
       summary: Осуществление платежа
       requestBody:

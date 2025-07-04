@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
+
 @Repository
 public interface OrderItemRepository extends ReactiveCrudRepository<OrderItem, Long> {
     Mono<OrderItem> findOrderItemByOrderIdAndItemId(Long orderId, Long itemId);
@@ -29,4 +31,7 @@ public interface OrderItemRepository extends ReactiveCrudRepository<OrderItem, L
     Mono<Long> countByOrderIdAndTitleLikeOrDescriptionLike(Long orderId, String title, String description);
 
     Mono<Void> deleteByOrderId(Long orderId);
+
+    @Query("select sum(oi.price * oi.count) from order_items oi where oi.order_id = :orderId")
+    Mono<BigDecimal> getTotalSumByOrderId(Long orderId);
 }

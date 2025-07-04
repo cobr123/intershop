@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -101,6 +102,10 @@ public class OrderItemService {
 
     public Flux<ItemUi> findByOrderId(Long orderId) {
         return orderItemRepository.findByOrderId(orderId);
+    }
+
+    public Mono<BigDecimal> getTotalSumByOrderId(Long orderId) {
+        return orderItemRepository.getTotalSumByOrderId(orderId);
     }
 
     public Mono<ItemUi> findByOrderIdAndItemId(Long orderId, Long itemId) {

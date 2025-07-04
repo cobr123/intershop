@@ -1,5 +1,6 @@
 package com.example.intershop.controller;
 
+import com.example.intershop.api.DefaultApi;
 import com.example.intershop.model.*;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
@@ -9,6 +10,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
+
 @Controller
 @RequestMapping("/cart/items")
 public class CartItemsController {
@@ -16,9 +19,16 @@ public class CartItemsController {
     private final OrderService orderService;
     private final OrderItemService orderItemService;
 
-    public CartItemsController(OrderService orderService, OrderItemService orderItemService) {
+    private final DefaultApi api;
+
+    public CartItemsController(
+            OrderService orderService,
+            OrderItemService orderItemService,
+            DefaultApi api
+    ) {
         this.orderService = orderService;
         this.orderItemService = orderItemService;
+        this.api = api;
     }
 
     @GetMapping
@@ -28,13 +38,24 @@ public class CartItemsController {
                         .collectList()
                         .map(items -> Pair.of(order.getId(), items))
                 )
+                .flatMap(pair -> api.balanceGetWithHttpInfo()
+                        .map(resp -> {
+                            if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
+                                return Pair.of(pair, resp.getBody().getBalance());
+                            } else {
+                                return Pair.of(pair, BigDecimal.ZERO);
+                            }
+                        })
+                )
                 .map(pair -> {
-                    var orderId = pair.getFirst();
-                    var items = pair.getSecond();
+                    var orderId = pair.getFirst().getFirst();
+                    var items = pair.getFirst().getSecond();
+                    var balance = pair.getSecond();
                     OrderUi orderUi = new OrderUi(orderId, items);
                     model.addAttribute("items", items);
                     model.addAttribute("total", orderUi.totalSum());
                     model.addAttribute("empty", items.isEmpty());
+                    model.addAttribute("balance", balance);
                     return "cart";
                 });
     }

@@ -60,6 +60,16 @@
 			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.8.5</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.annotation</groupId>
+			<artifactId>javax.annotation-api</artifactId>
+			<version>1.3.2</version>
+		</dependency>
+		<dependency>
 			<groupId>javax.validation</groupId>
 			<artifactId>validation-api</artifactId>
 			<version>2.0.1.Final</version>
@@ -105,6 +115,11 @@
 			<artifactId>reactor-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.example</groupId>
+			<artifactId>rest</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -112,6 +127,65 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.7.0</version>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<!-- https://github.com/OpenAPITools/openapi-generator/issues/2738 -->
+							<goal>unpack</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>com.example</groupId>
+									<artifactId>rest</artifactId>
+									<version>1.0.0-SNAPSHOT</version>
+									<type>jar</type>
+									<overWrite>false</overWrite>
+									<includes>**/*.yaml</includes>
+									<fileMappers>
+										<org.codehaus.plexus.components.io.filemappers.FlattenFileMapper />
+									</fileMappers>
+								</artifactItem>
+							</artifactItems>
+							<outputDirectory>${project.build.directory}/classes/</outputDirectory>
+							<overWriteReleases>true</overWriteReleases>
+							<overWriteSnapshots>false</overWriteSnapshots>
+							<overWriteIfNewer>true</overWriteIfNewer>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.openapitools</groupId>
+				<artifactId>openapi-generator-maven-plugin</artifactId>
+				<version>7.12.0</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<inputSpec>${project.build.directory}/classes/api-spec.yaml</inputSpec>
+					<generatorName>java</generatorName>
+					<modelPackage>com.example.intershop.domain</modelPackage>
+					<apiPackage>com.example.intershop.api</apiPackage>
+					<invokerPackage>com.example.intershop.client</invokerPackage>
+					<generateModelTests>false</generateModelTests>
+					<generateApiTests>false</generateApiTests>
+					<configOptions>
+						<library>webclient</library>
+						<useJakartaEe>true</useJakartaEe>
+						<openApiNullable>false</openApiNullable>
+					</configOptions>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

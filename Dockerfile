@@ -28,4 +28,5 @@ CMD ["java", "-jar", "/app.jar"]
 # Run the application (using the JRE, not the JDK)
 FROM amazoncorretto:21-alpine-jdk AS web
 COPY --from=build /build/web/target/*.jar app.jar
+RUN mkdir /items_images
 CMD ["java", "-jar", "/app.jar"]

@@ -115,11 +115,6 @@
 			<artifactId>reactor-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>com.example</groupId>
-			<artifactId>rest</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
-		</dependency>
 	</dependencies>
 
 	<build>
@@ -127,39 +122,6 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-dependency-plugin</artifactId>
-				<version>3.7.0</version>
-				<executions>
-					<execution>
-						<phase>generate-sources</phase>
-						<goals>
-							<!-- https://github.com/OpenAPITools/openapi-generator/issues/2738 -->
-							<goal>unpack</goal>
-						</goals>
-						<configuration>
-							<artifactItems>
-								<artifactItem>
-									<groupId>com.example</groupId>
-									<artifactId>rest</artifactId>
-									<version>1.0.0-SNAPSHOT</version>
-									<type>jar</type>
-									<overWrite>false</overWrite>
-									<includes>**/*.yaml</includes>
-									<fileMappers>
-										<org.codehaus.plexus.components.io.filemappers.FlattenFileMapper />
-									</fileMappers>
-								</artifactItem>
-							</artifactItems>
-							<outputDirectory>${project.build.directory}/classes/</outputDirectory>
-							<overWriteReleases>true</overWriteReleases>
-							<overWriteSnapshots>false</overWriteSnapshots>
-							<overWriteIfNewer>true</overWriteIfNewer>
-						</configuration>
-					</execution>
-				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.openapitools</groupId>
@@ -173,7 +135,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<inputSpec>${project.build.directory}/classes/api-spec.yaml</inputSpec>
+					<inputSpec>${project.basedir}/../rest/src/main/resources/api-spec.yaml</inputSpec>
 					<generatorName>java</generatorName>
 					<modelPackage>com.example.intershop.domain</modelPackage>
 					<apiPackage>com.example.intershop.api</apiPackage>

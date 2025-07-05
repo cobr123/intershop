@@ -361,13 +361,13 @@ public class OrderItemRepositoryTest {
                 .flatMap(pair -> {
                     Order order = pair.getLeft();
                     Item item = pair.getRight();
-                    return orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1));
+                    return orderItemService.insert(new OrderItem(order.getId(), item.getId(), 2));
                 })
-                .flatMap(orderItem -> orderItemService.getTotalSumByOrderId(orderItem.getId()))
+                .flatMap(orderItem -> orderItemService.getTotalSumByOrderId(orderItem.getOrderId()))
                 .as(Transaction::withRollback)
                 .as(StepVerifier::create)
                 .assertNext(sum -> {
-                    assertThat(sum).isEqualTo(BigDecimal.valueOf(2.5));
+                    assertThat(sum).isEqualTo(BigDecimal.valueOf(5));
                 })
                 .verifyComplete();
     }

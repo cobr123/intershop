@@ -24,12 +24,9 @@ public class OrderService {
                 .switchIfEmpty(insert(new Order(OrderStatus.NEW)));
     }
 
-    public Mono<Order> changeNewStatusToGathering() {
-        return findNewOrder()
-                .flatMap(order -> {
-                    order.setStatus(OrderStatus.GATHERING);
-                    return update(order);
-                });
+    public Mono<Order> changeNewStatusToGathering(Order order) {
+        order.setStatus(OrderStatus.GATHERING);
+        return update(order);
     }
 
     public Flux<Order> findAllNotNew() {

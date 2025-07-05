@@ -39,11 +39,12 @@ public class BuyController {
                     postBody.setSum(sum);
 
                     return api.balancePostWithHttpInfo(postBody)
-                            .map(resp -> {
+                            .flatMap(resp -> {
                                 if (resp.getStatusCode().is2xxSuccessful()) {
-                                    return "redirect:/orders/" + order.getId() + "?newOrder=true";
+                                    return orderService.changeNewStatusToGathering(order)
+                                            .thenReturn("redirect:/orders/" + order.getId() + "?newOrder=true");
                                 } else {
-                                    return "redirect:/orders/" + order.getId();
+                                    return Mono.just("redirect:/orders/" + order.getId());
                                 }
                             });
                 });

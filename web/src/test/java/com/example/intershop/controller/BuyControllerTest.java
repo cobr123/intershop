@@ -51,6 +51,7 @@ public class BuyControllerTest {
         doReturn(Mono.just(order)).when(orderService).findNewOrder();
         doReturn(Mono.just(BigDecimal.ONE)).when(orderItemService).getTotalSumByOrderId(anyLong());
         doReturn(Mono.just(ResponseEntity.ok().build())).when(api).balancePostWithHttpInfo(any());
+        doReturn(Mono.just(order)).when(orderService).changeNewStatusToGathering(any());
 
         webTestClient.post().uri("/buy").exchange()
                 .expectStatus().is3xxRedirection()

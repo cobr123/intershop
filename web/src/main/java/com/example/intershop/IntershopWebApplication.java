@@ -39,7 +39,7 @@ public class IntershopWebApplication {
     }
 
     @Bean
-    public DefaultApi defaultApi(@Value("${REST_HOST}") String restHost, @Value("${REST_PORT}") int restPort) {
+    public DefaultApi defaultApi(@Value("${REST_HOST:localhost}") String restHost, @Value("${REST_PORT:8081}") int restPort) {
         return new DefaultApi(new ApiClient().setBasePath("http://" + restHost + ":" + restPort));
     }
 }

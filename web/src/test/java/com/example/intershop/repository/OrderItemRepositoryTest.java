@@ -353,4 +353,22 @@ public class OrderItemRepositoryTest {
                 })
                 .verifyComplete();
     }
+
+    @Test
+    public void testGetTotalSum() {
+        itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
+                .flatMap(item -> orderService.findNewOrder().map(order -> Pair.of(order, item)))
+                .flatMap(pair -> {
+                    Order order = pair.getLeft();
+                    Item item = pair.getRight();
+                    return orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1));
+                })
+                .flatMap(orderItem -> orderItemService.getTotalSumByOrderId(orderItem.getId()))
+                .as(Transaction::withRollback)
+                .as(StepVerifier::create)
+                .assertNext(sum -> {
+                    assertThat(sum).isEqualTo(BigDecimal.valueOf(2.5));
+                })
+                .verifyComplete();
+    }
 }

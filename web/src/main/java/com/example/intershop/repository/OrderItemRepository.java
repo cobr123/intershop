@@ -32,6 +32,6 @@ public interface OrderItemRepository extends ReactiveCrudRepository<OrderItem, L
 
     Mono<Void> deleteByOrderId(Long orderId);
 
-    @Query("select sum(oi.price * oi.count) from order_items oi where oi.order_id = :orderId")
+    @Query("select sum(i.price * oi.count) from items i, order_items oi where oi.order_id = :orderId and i.id = oi.item_id")
     Mono<BigDecimal> getTotalSumByOrderId(Long orderId);
 }

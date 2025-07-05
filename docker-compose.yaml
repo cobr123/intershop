@@ -13,12 +13,14 @@ services:
     image: redis:8-alpine
 
   rest:
-    build: ./rest # https://github.com/cobr123/intershop/rest
+    build:
+      target: rest
     ports:
       - '8081:8080'
 
   web:
-    build: ./web # https://github.com/cobr123/intershop/web
+    build:
+      target: web
     ports:
       - '8080:8080'
     depends_on:

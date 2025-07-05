@@ -2,6 +2,8 @@
 # (This only happens when pom.xml changes or you clear your docker image cache)
 FROM maven:3-amazoncorretto-21-alpine AS dependencies
 COPY pom.xml /build/
+COPY rest/pom.xml /build/rest/
+COPY web/pom.xml /build/web/
 WORKDIR /build/
 RUN mvn --batch-mode dependency:go-offline dependency:resolve-plugins
 
@@ -11,12 +13,19 @@ RUN mvn --batch-mode dependency:go-offline dependency:resolve-plugins
 FROM maven:3-amazoncorretto-21-alpine AS build
 COPY --from=dependencies /root/.m2 /root/.m2
 COPY pom.xml /build/
-COPY src /build/src
+COPY rest/pom.xml /build/rest/
+COPY web/pom.xml /build/web/
+COPY rest /build/rest
+COPY web /build/web
 WORKDIR /build/
 RUN mvn package -Dmaven.test.skip
 
 # Run the application (using the JRE, not the JDK)
-FROM amazoncorretto:21-alpine-jdk AS runtime
-COPY --from=build /build/target/*.jar app.jar
-RUN mkdir /items_images
+FROM amazoncorretto:21-alpine-jdk AS rest
+COPY --from=build /build/rest/target/*.jar app.jar
+CMD ["java", "-jar", "/app.jar"]
+
+# Run the application (using the JRE, not the JDK)
+FROM amazoncorretto:21-alpine-jdk AS web
+COPY --from=build /build/web/target/*.jar app.jar
 CMD ["java", "-jar", "/app.jar"]

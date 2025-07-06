@@ -6,10 +6,12 @@ import com.example.intershop.model.Order;
 import com.example.intershop.model.OrderStatus;
 import com.example.intershop.service.OrderService;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringRunner;
 import reactor.test.StepVerifier;
@@ -26,6 +28,16 @@ public class OrderRepositoryTest {
 
     @Autowired
     private OrderService service;
+
+    @Autowired
+    CacheManager cacheManager;
+
+    @Before
+    public void evictAllCacheValues() {
+        for (var cacheName : cacheManager.getCacheNames()) {
+            cacheManager.getCache(cacheName).clear();
+        }
+    }
 
     @Test
     public void testCreate() {

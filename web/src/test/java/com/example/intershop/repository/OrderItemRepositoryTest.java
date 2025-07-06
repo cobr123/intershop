@@ -7,10 +7,12 @@ import com.example.intershop.service.ItemService;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringRunner;
 import reactor.test.StepVerifier;
@@ -39,6 +41,16 @@ public class OrderItemRepositoryTest {
     private OrderItemRepository orderItemRepository;
     @Autowired
     private OrderItemService orderItemService;
+
+    @Autowired
+    CacheManager cacheManager;
+
+    @Before
+    public void evictAllCacheValues() {
+        for (var cacheName : cacheManager.getCacheNames()) {
+            cacheManager.getCache(cacheName).clear();
+        }
+    }
 
     @Test
     public void testCreate() {
@@ -367,7 +379,7 @@ public class OrderItemRepositoryTest {
                 .as(Transaction::withRollback)
                 .as(StepVerifier::create)
                 .assertNext(sum -> {
-                    assertThat(sum).isEqualTo(BigDecimal.valueOf(5));
+                    assertThat(sum).isEqualTo(BigDecimal.valueOf(5.0));
                 })
                 .verifyComplete();
     }

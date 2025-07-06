@@ -3,6 +3,7 @@ package com.example.intershop;
 import com.example.intershop.api.DefaultApi;
 import com.example.intershop.client.ApiClient;
 import com.example.intershop.model.Item;
+import com.example.intershop.model.Order;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -26,16 +27,27 @@ public class IntershopWebApplication {
 
     @Bean
     public RedisCacheManagerBuilderCustomizer cacheCustomizer() {
-        return builder -> builder.withCacheConfiguration(
-                "items",
-                RedisCacheConfiguration.defaultCacheConfig()
-                        .entryTtl(Duration.of(1, ChronoUnit.MINUTES))
-                        .serializeValuesWith(
-                                RedisSerializationContext.SerializationPair.fromSerializer(
-                                        new Jackson2JsonRedisSerializer<>(Item.class)
+        return builder -> builder
+                .withCacheConfiguration(
+                        "items",
+                        RedisCacheConfiguration.defaultCacheConfig()
+                                .entryTtl(Duration.of(1, ChronoUnit.MINUTES))
+                                .serializeValuesWith(
+                                        RedisSerializationContext.SerializationPair.fromSerializer(
+                                                new Jackson2JsonRedisSerializer<>(Item.class)
+                                        )
                                 )
-                        )
-        );
+                )
+                .withCacheConfiguration(
+                        "orders",
+                        RedisCacheConfiguration.defaultCacheConfig()
+                                .entryTtl(Duration.of(1, ChronoUnit.MINUTES))
+                                .serializeValuesWith(
+                                        RedisSerializationContext.SerializationPair.fromSerializer(
+                                                new Jackson2JsonRedisSerializer<>(Order.class)
+                                        )
+                                )
+                );
     }
 
     @Bean

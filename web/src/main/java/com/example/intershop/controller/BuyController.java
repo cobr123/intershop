@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+
 @Controller
 @RequestMapping("/buy")
 public class BuyController {
@@ -39,14 +42,16 @@ public class BuyController {
                     postBody.setSum(sum);
 
                     return api.balancePostWithHttpInfo(postBody)
+                            .timeout(Duration.of(5, ChronoUnit.SECONDS))
                             .flatMap(resp -> {
                                 if (resp.getStatusCode().is2xxSuccessful()) {
                                     return orderService.changeNewStatusToGathering(order)
                                             .thenReturn("redirect:/orders/" + order.getId() + "?newOrder=true");
                                 } else {
-                                    return Mono.just("redirect:/orders/" + order.getId());
+                                    return Mono.just("redirect:/cart/items");
                                 }
-                            });
+                            })
+                            .onErrorReturn("redirect:/cart/items");
                 });
     }
 

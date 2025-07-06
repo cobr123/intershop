@@ -3,6 +3,7 @@ package com.example.intershop;
 import com.example.intershop.api.DefaultApi;
 import com.example.intershop.client.ApiClient;
 import com.example.intershop.model.Item;
+import com.example.intershop.model.Items;
 import com.example.intershop.model.Order;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -45,6 +46,16 @@ public class IntershopWebApplication {
                                 .serializeValuesWith(
                                         RedisSerializationContext.SerializationPair.fromSerializer(
                                                 new Jackson2JsonRedisSerializer<>(Order.class)
+                                        )
+                                )
+                )
+                .withCacheConfiguration(
+                        "paged_order_items",
+                        RedisCacheConfiguration.defaultCacheConfig()
+                                .entryTtl(Duration.of(1, ChronoUnit.MINUTES))
+                                .serializeValuesWith(
+                                        RedisSerializationContext.SerializationPair.fromSerializer(
+                                                new Jackson2JsonRedisSerializer<>(Items.class)
                                         )
                                 )
                 );

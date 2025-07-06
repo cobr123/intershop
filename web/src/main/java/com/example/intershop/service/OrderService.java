@@ -5,6 +5,7 @@ import com.example.intershop.model.OrderStatus;
 import com.example.intershop.repository.OrderItemRepository;
 import com.example.intershop.repository.OrderRepository;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -42,11 +43,12 @@ public class OrderService {
         return orderRepository.findById(id);
     }
 
+    @CachePut(value = "orders", key = "#result.id")
     public Mono<Order> insert(Order order) {
         return orderRepository.save(order);
     }
 
-    @Cacheable(value = "orders", key = "#order.id")
+    @CachePut(value = "orders", key = "#order.id")
     public Mono<Order> update(Order order) {
         return orderRepository.save(order);
     }

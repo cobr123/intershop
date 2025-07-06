@@ -22,7 +22,7 @@ public class ItemService {
         return repository.findById(id);
     }
 
-    @CachePut(value = "items", key = "#item.id")
+    @CachePut(value = "items", key = "#result.id")
     public Mono<Item> insert(Item item) {
         return repository.save(item);
     }

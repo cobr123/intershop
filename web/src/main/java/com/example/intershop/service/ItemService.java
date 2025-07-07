@@ -5,6 +5,7 @@ import com.example.intershop.repository.ItemRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -22,17 +23,26 @@ public class ItemService {
         return repository.findById(id);
     }
 
-    @CachePut(value = "items", key = "#result.id")
+    @Caching(
+            evict = {@CacheEvict(value = "paged_order_items", allEntries = true)},
+            put = {@CachePut(value = "items", key = "#result.id")}
+    )
     public Mono<Item> insert(Item item) {
         return repository.save(item);
     }
 
-    @CachePut(value = "items", key = "#item.id")
+    @Caching(
+            evict = {@CacheEvict(value = "paged_order_items", allEntries = true)},
+            put = {@CachePut(value = "items", key = "#item.id")}
+    )
     public Mono<Item> update(Item item) {
         return repository.save(item);
     }
 
-    @CacheEvict(value = "items", key = "#id")
+    @Caching(evict = {
+            @CacheEvict(value = "paged_order_items", allEntries = true),
+            @CacheEvict(value = "items", key = "#id")
+    })
     public Mono<Void> deleteById(Long id) {
         return repository.deleteById(id);
     }

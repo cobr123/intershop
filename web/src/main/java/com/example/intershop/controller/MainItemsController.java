@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.security.Principal;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/main/items")
@@ -31,20 +32,21 @@ public class MainItemsController {
     @GetMapping
     public Mono<String> getAll(Model model, @Valid SearchForm searchForm) {
         return ReactiveSecurityContextHolder.getContext()
-                .map(SecurityContext::getAuthentication)
+                .map(Optional::of)
+                .switchIfEmpty(Mono.just(Optional.empty()))
+                .map(securityContextOptional -> securityContextOptional.flatMap(securityContext -> Optional.ofNullable(securityContext.getAuthentication())))
                 .flatMap(auth -> {
-                    if (auth != null) {
-                        return userService.findByName(auth.getName())
-                                .flatMap(user -> orderService.findNewOrder(user.getId()).map(Order::getId));
-                    } else {
-                        return Mono.just(null);
-                    }
+                    return auth.map(authentication -> userService.findByName(authentication.getName())
+                                    .flatMap(user -> orderService.findNewOrder(user.getId()).map(Order::getId))
+                                    .map(Optional::of)
+                            )
+                            .orElseGet(() -> Mono.just(Optional.empty()));
                 })
-                .flatMap(orderId -> {
+                .flatMap(orderIdOpt -> {
                     if (searchForm.getSearch().isBlank()) {
-                        return orderItemService.findAll(orderId, searchForm.getItemSort(), searchForm.getPageSize(), searchForm.getPageNumber());
+                        return orderItemService.findAll(orderIdOpt.orElse(null), searchForm.getItemSort(), searchForm.getPageSize(), searchForm.getPageNumber());
                     } else {
-                        return orderItemService.findByTitleLikeOrDescriptionLike(orderId, searchForm.getSearch(), searchForm.getItemSort(), searchForm.getPageSize(), searchForm.getPageNumber());
+                        return orderItemService.findByTitleLikeOrDescriptionLike(orderIdOpt.orElse(null), searchForm.getSearch(), searchForm.getItemSort(), searchForm.getPageSize(), searchForm.getPageNumber());
                     }
                 })
                 .map(items -> {

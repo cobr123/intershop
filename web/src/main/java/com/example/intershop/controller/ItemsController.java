@@ -20,6 +20,7 @@ import reactor.core.scheduler.Schedulers;
 
 import java.io.File;
 import java.security.Principal;
+import java.util.Optional;
 import java.util.UUID;
 
 @Controller
@@ -44,16 +45,17 @@ public class ItemsController {
     @GetMapping("/{id}")
     public Mono<String> getItem(Model model, @PathVariable("id") Long itemId) {
         return ReactiveSecurityContextHolder.getContext()
-                .map(SecurityContext::getAuthentication)
+                .map(Optional::of)
+                .switchIfEmpty(Mono.just(Optional.empty()))
+                .map(securityContextOptional -> securityContextOptional.flatMap(securityContext -> Optional.ofNullable(securityContext.getAuthentication())))
                 .flatMap(auth -> {
-                    if (auth != null) {
-                        return userService.findByName(auth.getName())
-                                .flatMap(user -> orderService.findNewOrder(user.getId()).map(Order::getId));
-                    } else {
-                        return Mono.just(null);
-                    }
+                    return auth.map(authentication -> userService.findByName(authentication.getName())
+                                    .flatMap(user -> orderService.findNewOrder(user.getId()).map(Order::getId))
+                                    .map(Optional::of)
+                            )
+                            .orElseGet(() -> Mono.just(Optional.empty()));
                 })
-                .flatMap(orderId -> orderItemService.findByOrderIdAndItemId(orderId, itemId))
+                .flatMap(orderIdOpt -> orderItemService.findByOrderIdAndItemId(orderIdOpt.orElse(null), itemId))
                 .map(itemUi -> model.addAttribute("item", itemUi))
                 .thenReturn("item");
     }

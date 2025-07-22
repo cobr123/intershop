@@ -57,7 +57,7 @@ public class MainItemsControllerTest {
         Items items = new Items(ItemUi.grouped(List.of(item1, item2)), paging);
 
         doReturn(Mono.just(order)).when(orderService).findNewOrder(anyLong());
-        doReturn(Mono.just(items)).when(orderItemService).findAll(anyLong(), any(), anyInt(), anyInt());
+        doReturn(Mono.just(items)).when(orderItemService).findAll(any(), any(), anyInt(), anyInt());
 
         webTestClient.get().uri("/main/items").exchange()
                 .expectStatus().isOk()

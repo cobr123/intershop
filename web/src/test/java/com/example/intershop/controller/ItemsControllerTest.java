@@ -60,7 +60,7 @@ public class ItemsControllerTest {
         var item = new ItemUi(1L, "title1", "description1", "imgPath1", 1, BigDecimal.valueOf(1.1));
 
         doReturn(Mono.just(order)).when(orderService).findNewOrder(anyLong());
-        doReturn(Mono.just(item)).when(orderItemService).findByOrderIdAndItemId(anyLong(), anyLong());
+        doReturn(Mono.just(item)).when(orderItemService).findByOrderIdAndItemId(any(), anyLong());
 
         webTestClient.get().uri("/items/1").exchange()
                 .expectStatus().isOk()

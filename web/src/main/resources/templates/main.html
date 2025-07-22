@@ -72,7 +72,7 @@
                     <tr>
                         <td th:text="${item.getDescription()}"></td>
                     </tr>
-                    <tr>
+                    <tr sec:authorize="isAuthenticated()">
                         <td>
                             <form th:action="${'/main/items/'+item.getId()}" method="post">
                                 <button name="action" value="minus">-</button>

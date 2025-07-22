@@ -31,10 +31,25 @@ public class OrderItemService {
                     var searchLike = "%" + search + "%";
                     return Pair.of(sort, searchLike);
                 })
-                .flatMap(pair -> withOffset(orderItemRepository.findByTitleLikeOrDescriptionLike(orderId, pair.getSecond(), pair.getSecond(), pair.getFirst()), pageSize, pageNumber)
-                        .map(items -> Pair.of(items, pair.getSecond())))
-                .flatMap(pair -> orderItemRepository.countByOrderIdAndTitleLikeOrDescriptionLike(orderId, pair.getSecond(), pair.getSecond())
-                        .map(count -> Pair.of(pair.getFirst(), count)))
+                .flatMap(pair -> {
+                    Flux<ItemUi> itemUiFlux;
+                    if (orderId == null) {
+                        itemUiFlux = orderItemRepository.findByTitleLikeOrDescriptionLike(pair.getSecond(), pair.getSecond(), pair.getFirst());
+                    } else {
+                        itemUiFlux = orderItemRepository.findByTitleLikeOrDescriptionLike(orderId, pair.getSecond(), pair.getSecond(), pair.getFirst());
+                    }
+                    return withOffset(itemUiFlux, pageSize, pageNumber)
+                            .map(items -> Pair.of(items, pair.getSecond()));
+                })
+                .flatMap(pair -> {
+                    Mono<Long> countMono;
+                    if (orderId == null) {
+                        countMono = orderItemRepository.countByTitleLikeOrDescriptionLike(pair.getSecond(), pair.getSecond());
+                    } else {
+                        countMono = orderItemRepository.countByOrderIdAndTitleLikeOrDescriptionLike(orderId, pair.getSecond(), pair.getSecond());
+                    }
+                    return countMono.map(count -> Pair.of(pair.getFirst(), count));
+                })
                 .map(pair -> {
                     var items = pair.getFirst();
                     var totalCount = pair.getSecond();
@@ -46,7 +61,15 @@ public class OrderItemService {
     @Cacheable(value = "paged_order_items", key = "#orderId + '_' + #itemSort.name() + '_' + #pageSize + '_' + #pageNumber")
     public Mono<Items> findAll(Long orderId, ItemSort itemSort, int pageSize, int pageNumber) {
         return Mono.just(itemSort.toSort())
-                .flatMap(sort -> withOffset(orderItemRepository.findAll(orderId, sort), pageSize, pageNumber))
+                .flatMap(sort -> {
+                    Flux<ItemUi> itemUiFlux;
+                    if (orderId == null) {
+                        itemUiFlux = orderItemRepository.findAll(sort);
+                    } else {
+                        itemUiFlux = orderItemRepository.findAll(orderId, sort);
+                    }
+                    return withOffset(itemUiFlux, pageSize, pageNumber);
+                })
                 .flatMap(items -> itemRepository.count().map(count -> Pair.of(items, count)))
                 .map(pair -> {
                     var items = pair.getFirst();
@@ -115,7 +138,11 @@ public class OrderItemService {
     }
 
     public Mono<ItemUi> findByOrderIdAndItemId(Long orderId, Long itemId) {
-        return orderItemRepository.findByOrderIdAndItemId(orderId, itemId);
+        if (orderId == null) {
+            return orderItemRepository.findByItemId(itemId);
+        } else {
+            return orderItemRepository.findByOrderIdAndItemId(orderId, itemId);
+        }
     }
 
     @CacheEvict(value = "paged_order_items", allEntries = true)

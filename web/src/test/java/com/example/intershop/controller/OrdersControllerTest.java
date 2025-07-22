@@ -1,13 +1,17 @@
 package com.example.intershop.controller;
 
+import com.example.intershop.configuration.SecurityConfig;
 import com.example.intershop.model.*;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
+import com.example.intershop.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
@@ -19,12 +23,16 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doReturn;
 
 @WebFluxTest(OrdersController.class)
+@Import(SecurityConfig.class)
 public class OrdersControllerTest {
 
     @MockitoBean
     private OrderService orderService;
     @MockitoBean
     private OrderItemService orderItemService;
+
+    @MockitoBean
+    private UserService userService;
 
     @Autowired
     private WebTestClient webTestClient;
@@ -33,9 +41,11 @@ public class OrdersControllerTest {
     void setUp() {
         Mockito.reset(orderService);
         Mockito.reset(orderItemService);
+        Mockito.reset(userService);
     }
 
     @Test
+    @WithMockUser
     public void testOrdersList() throws Exception {
         Order order = new Order();
         order.setId(1L);
@@ -54,6 +64,7 @@ public class OrdersControllerTest {
     }
 
     @Test
+    @WithMockUser
     public void testOrderCard() throws Exception {
         Order order = new Order();
         order.setId(1L);
@@ -72,6 +83,7 @@ public class OrdersControllerTest {
     }
 
     @Test
+    @WithMockUser
     public void testNewOrderCard() throws Exception {
         Order order = new Order();
         order.setId(1L);

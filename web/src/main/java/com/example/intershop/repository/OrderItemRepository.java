@@ -15,17 +15,29 @@ import java.math.BigDecimal;
 public interface OrderItemRepository extends ReactiveCrudRepository<OrderItem, Long> {
     Mono<OrderItem> findOrderItemByOrderIdAndItemId(Long orderId, Long itemId);
 
+    @Query("select i.id, i.title, i.description, i.img_path, 0 as count, i.price from items i where i.id = :itemId")
+    Mono<ItemUi> findByItemId(Long itemId);
+
     @Query("select i.id, i.title, i.description, i.img_path, coalesce(oi.count, 0) as count, i.price from items i left join order_items oi on oi.order_id = :orderId and i.id = oi.item_id where i.id = :itemId")
     Mono<ItemUi> findByOrderIdAndItemId(Long orderId, Long itemId);
 
     @Query("select i.id, i.title, i.description, i.img_path, oi.count, i.price from items i, order_items oi where oi.order_id = :orderId and i.id = oi.item_id")
     Flux<ItemUi> findByOrderId(Long orderId);
 
+    @Query("select i.id, i.title, i.description, i.img_path, 0 as count, i.price from items i where (i.title like :title or i.description like :description)")
+    Flux<ItemUi> findByTitleLikeOrDescriptionLike(String title, String description, Sort sort);
+
     @Query("select i.id, i.title, i.description, i.img_path, coalesce(oi.count, 0) as count, i.price from items i left join order_items oi on oi.item_id = i.id and oi.order_id = :orderId where (i.title like :title or i.description like :description)")
     Flux<ItemUi> findByTitleLikeOrDescriptionLike(Long orderId, String title, String description, Sort sort);
 
+    @Query("select i.id, i.title, i.description, i.img_path, 0 as count, i.price from items i")
+    Flux<ItemUi> findAll(Sort sort);
+
     @Query("select i.id, i.title, i.description, i.img_path, coalesce(oi.count, 0) as count, i.price from items i left join order_items oi on oi.item_id = i.id and oi.order_id = :orderId")
     Flux<ItemUi> findAll(Long orderId, Sort sort);
+
+    @Query("select count(*) from items i where (i.title like :title or i.description like :description)")
+    Mono<Long> countByTitleLikeOrDescriptionLike(String title, String description);
 
     @Query("select count(*) from items i left join order_items oi on oi.item_id = i.id and oi.order_id = :orderId where (i.title like :title or i.description like :description)")
     Mono<Long> countByOrderIdAndTitleLikeOrDescriptionLike(Long orderId, String title, String description);

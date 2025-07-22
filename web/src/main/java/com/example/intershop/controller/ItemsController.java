@@ -3,10 +3,14 @@ package com.example.intershop.controller;
 import com.example.intershop.model.AddItemForm;
 import com.example.intershop.model.ChangeCountForm;
 import com.example.intershop.model.Item;
+import com.example.intershop.model.Order;
 import com.example.intershop.service.ItemService;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
+import com.example.intershop.service.UserService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -15,6 +19,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.io.File;
+import java.security.Principal;
 import java.util.UUID;
 
 @Controller
@@ -24,27 +29,42 @@ public class ItemsController {
     private final ItemService itemService;
     private final OrderService orderService;
     private final OrderItemService orderItemService;
+    private final UserService userService;
 
     @Value("${items.image_dir}")
     private File image_dir;
 
-    public ItemsController(ItemService itemService, OrderService orderService, OrderItemService orderItemService) {
+    public ItemsController(ItemService itemService, OrderService orderService, OrderItemService orderItemService, UserService userService) {
         this.itemService = itemService;
         this.orderService = orderService;
         this.orderItemService = orderItemService;
+        this.userService = userService;
     }
 
     @GetMapping("/{id}")
     public Mono<String> getItem(Model model, @PathVariable("id") Long itemId) {
-        return orderService.findNewOrder()
-                .flatMap(order -> orderItemService.findByOrderIdAndItemId(order.getId(), itemId))
+        return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .flatMap(auth -> {
+                    if (auth != null) {
+                        return userService.findByName(auth.getName())
+                                .flatMap(user -> orderService.findNewOrder(user.getId()).map(Order::getId));
+                    } else {
+                        return Mono.just(null);
+                    }
+                })
+                .flatMap(orderId -> orderItemService.findByOrderIdAndItemId(orderId, itemId))
                 .map(itemUi -> model.addAttribute("item", itemUi))
                 .thenReturn("item");
     }
 
     @PostMapping("/{id}")
     public Mono<String> update(@PathVariable("id") Long itemId, ChangeCountForm changeCountForm) {
-        return orderService.findNewOrder()
+        return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .map(Principal::getName)
+                .flatMap(userService::findByName)
+                .flatMap(user -> orderService.findNewOrder(user.getId()))
                 .flatMap(order -> orderItemService.update(order.getId(), itemId, changeCountForm.getAction()))
                 .thenReturn("redirect:/items/" + itemId);
     }

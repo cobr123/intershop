@@ -4,13 +4,17 @@ import com.example.intershop.api.DefaultApi;
 import com.example.intershop.model.*;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
+import com.example.intershop.service.UserService;
 import org.springframework.data.util.Pair;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.security.Principal;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
@@ -21,21 +25,29 @@ public class CartItemsController {
     private final OrderService orderService;
     private final OrderItemService orderItemService;
 
+    private final UserService userService;
+
     private final DefaultApi api;
 
     public CartItemsController(
             OrderService orderService,
             OrderItemService orderItemService,
+            UserService userService,
             DefaultApi api
     ) {
         this.orderService = orderService;
         this.orderItemService = orderItemService;
+        this.userService = userService;
         this.api = api;
     }
 
     @GetMapping
     public Mono<String> getOrderItems(Model model) {
-        return orderService.findNewOrder()
+        return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .map(Principal::getName)
+                .flatMap(userService::findByName)
+                .flatMap(user -> orderService.findNewOrder(user.getId()))
                 .flatMap(order -> orderItemService.findByOrderId(order.getId())
                         .collectList()
                         .map(items -> Pair.of(order.getId(), items))
@@ -66,7 +78,11 @@ public class CartItemsController {
 
     @PostMapping("/{id}")
     public Mono<String> update(@PathVariable("id") Long itemId, ChangeCountForm changeCountForm) {
-        return orderService.findNewOrder()
+        return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .map(Principal::getName)
+                .flatMap(userService::findByName)
+                .flatMap(user -> orderService.findNewOrder(user.getId()))
                 .flatMap(order -> orderItemService.update(order.getId(), itemId, changeCountForm.getAction()))
                 .thenReturn("redirect:/cart/items");
     }

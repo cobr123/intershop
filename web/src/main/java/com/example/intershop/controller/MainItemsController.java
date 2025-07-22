@@ -3,11 +3,16 @@ package com.example.intershop.controller;
 import com.example.intershop.model.*;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
+import com.example.intershop.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
+
+import java.security.Principal;
 
 @Controller
 @RequestMapping("/main/items")
@@ -15,20 +20,31 @@ public class MainItemsController {
 
     private final OrderService orderService;
     private final OrderItemService orderItemService;
+    private final UserService userService;
 
-    public MainItemsController(OrderService orderService, OrderItemService orderItemService) {
+    public MainItemsController(OrderService orderService, OrderItemService orderItemService, UserService userService) {
         this.orderService = orderService;
         this.orderItemService = orderItemService;
+        this.userService = userService;
     }
 
     @GetMapping
     public Mono<String> getAll(Model model, @Valid SearchForm searchForm) {
-        return orderService.findNewOrder()
-                .flatMap(order -> {
-                    if (searchForm.getSearch().isBlank()) {
-                        return orderItemService.findAll(order.getId(), searchForm.getItemSort(), searchForm.getPageSize(), searchForm.getPageNumber());
+        return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .flatMap(auth -> {
+                    if (auth != null) {
+                        return userService.findByName(auth.getName())
+                                .flatMap(user -> orderService.findNewOrder(user.getId()).map(Order::getId));
                     } else {
-                        return orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), searchForm.getSearch(), searchForm.getItemSort(), searchForm.getPageSize(), searchForm.getPageNumber());
+                        return Mono.just(null);
+                    }
+                })
+                .flatMap(orderId -> {
+                    if (searchForm.getSearch().isBlank()) {
+                        return orderItemService.findAll(orderId, searchForm.getItemSort(), searchForm.getPageSize(), searchForm.getPageNumber());
+                    } else {
+                        return orderItemService.findByTitleLikeOrDescriptionLike(orderId, searchForm.getSearch(), searchForm.getItemSort(), searchForm.getPageSize(), searchForm.getPageNumber());
                     }
                 })
                 .map(items -> {
@@ -43,7 +59,11 @@ public class MainItemsController {
 
     @PostMapping("/{id}")
     public Mono<String> update(@PathVariable("id") Long itemId, ChangeCountForm changeCountForm) {
-        return orderService.findNewOrder()
+        return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .map(Principal::getName)
+                .flatMap(userService::findByName)
+                .flatMap(user -> orderService.findNewOrder(user.getId()))
                 .flatMap(order -> orderItemService.update(order.getId(), itemId, changeCountForm.getAction()))
                 .thenReturn("redirect:/main/items");
     }

@@ -1,12 +1,15 @@
 package com.example.intershop.controller;
 
+import com.example.intershop.configuration.SecurityConfig;
 import com.example.intershop.model.Item;
 import com.example.intershop.service.ItemService;
+import com.example.intershop.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
@@ -18,10 +21,14 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doReturn;
 
 @WebFluxTest(ImageController.class)
+@Import(SecurityConfig.class)
 public class ImageControllerTest {
 
     @MockitoBean
     private ItemService itemService;
+
+    @MockitoBean
+    private UserService userService;
 
     @Autowired
     private WebTestClient webTestClient;
@@ -29,6 +36,7 @@ public class ImageControllerTest {
     @BeforeEach
     void setUp() {
         Mockito.reset(itemService);
+        Mockito.reset(userService);
     }
 
     @Test

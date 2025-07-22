@@ -9,12 +9,15 @@ public class Order {
     @Id
     private Long id;
     @Column
+    private Long userId;
+    @Column
     private OrderStatus status;
 
     public Order() {
     }
 
-    public Order(OrderStatus status) {
+    public Order(Long userId, OrderStatus status) {
+        this.userId = userId;
         this.status = status;
     }
 
@@ -24,6 +27,14 @@ public class Order {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public OrderStatus getStatus() {

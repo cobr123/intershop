@@ -6,6 +6,7 @@ import com.example.intershop.model.*;
 import com.example.intershop.service.ItemService;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
+import com.example.intershop.service.UserService;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,6 +44,9 @@ public class OrderItemRepositoryTest {
     private OrderItemService orderItemService;
 
     @Autowired
+    private UserService userService;
+
+    @Autowired
     CacheManager cacheManager;
 
     @Before
@@ -54,13 +58,15 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testCreate() {
-        itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
-                .flatMap(item -> orderService.findNewOrder().map(order -> Pair.of(item, order)))
-                .flatMap(pair -> {
-                    Order order = pair.getRight();
-                    Item item = pair.getLeft();
-                    return orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1));
-                })
+        userService.insert(new User("name", "")).flatMap(user ->
+                        itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
+                                .flatMap(item -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(item, order)))
+                                .flatMap(pair -> {
+                                    Order order = pair.getRight();
+                                    Item item = pair.getLeft();
+                                    return orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1));
+                                })
+                )
                 .as(Transaction::withRollback)
                 .as(StepVerifier::create)
                 .assertNext(orderItem -> {
@@ -75,37 +81,39 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testChangeCount() {
-        itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
-                .flatMap(item -> orderService.findNewOrder().map(order -> Pair.of(item, order)))
-                .flatMap(pair -> {
-                    Order order = pair.getRight();
-                    Item item = pair.getLeft();
-                    return orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1));
-                })
-                .flatMap(orderItem -> {
-                    return orderItemService.update(orderItem.getOrderId(), orderItem.getItemId(), ItemAction.PLUS)
-                            .then(orderItemService.findById(orderItem.getId()))
-                            .map(incremented -> {
-                                assertThat(incremented.getCount()).isEqualTo(2);
-                                return incremented;
-                            });
-                })
-                .flatMap(orderItem -> {
-                    return orderItemService.update(orderItem.getOrderId(), orderItem.getItemId(), ItemAction.MINUS)
-                            .then(orderItemService.findById(orderItem.getId()))
-                            .map(decremented -> {
-                                assertThat(decremented.getCount()).isEqualTo(1);
-                                return decremented;
-                            });
-                })
-                .flatMap(orderItem -> {
-                    return orderItemService.update(orderItem.getOrderId(), orderItem.getItemId(), ItemAction.DELETE)
-                            .then(orderItemService.existsById(orderItem.getId()))
-                            .map(exists -> {
-                                assertThat(exists).isEqualTo(false);
-                                return orderItem;
-                            });
-                })
+        userService.insert(new User("name", "")).flatMap(user ->
+                        itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
+                                .flatMap(item -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(item, order)))
+                                .flatMap(pair -> {
+                                    Order order = pair.getRight();
+                                    Item item = pair.getLeft();
+                                    return orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1));
+                                })
+                                .flatMap(orderItem -> {
+                                    return orderItemService.update(orderItem.getOrderId(), orderItem.getItemId(), ItemAction.PLUS)
+                                            .then(orderItemService.findById(orderItem.getId()))
+                                            .map(incremented -> {
+                                                assertThat(incremented.getCount()).isEqualTo(2);
+                                                return incremented;
+                                            });
+                                })
+                                .flatMap(orderItem -> {
+                                    return orderItemService.update(orderItem.getOrderId(), orderItem.getItemId(), ItemAction.MINUS)
+                                            .then(orderItemService.findById(orderItem.getId()))
+                                            .map(decremented -> {
+                                                assertThat(decremented.getCount()).isEqualTo(1);
+                                                return decremented;
+                                            });
+                                })
+                                .flatMap(orderItem -> {
+                                    return orderItemService.update(orderItem.getOrderId(), orderItem.getItemId(), ItemAction.DELETE)
+                                            .then(orderItemService.existsById(orderItem.getId()))
+                                            .map(exists -> {
+                                                assertThat(exists).isEqualTo(false);
+                                                return orderItem;
+                                            });
+                                })
+                )
                 .as(Transaction::withRollback)
                 .as(StepVerifier::create)
                 .assertNext(orderItem -> {
@@ -115,14 +123,16 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testFindByOrderId() {
-        itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
-                .flatMap(item -> orderService.findNewOrder().map(order -> Pair.of(item, order)))
-                .flatMap(pair -> {
-                    Order order = pair.getRight();
-                    Item item = pair.getLeft();
-                    return orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1));
-                })
-                .flatMap(orderItem -> orderItemService.findByOrderId(orderItem.getOrderId()).collectList().map(orderItems -> Pair.of(orderItem, orderItems)))
+        userService.insert(new User("name", "")).flatMap(user ->
+                        itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
+                                .flatMap(item -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(item, order)))
+                                .flatMap(pair -> {
+                                    Order order = pair.getRight();
+                                    Item item = pair.getLeft();
+                                    return orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1));
+                                })
+                                .flatMap(orderItem -> orderItemService.findByOrderId(orderItem.getOrderId()).collectList().map(orderItems -> Pair.of(orderItem, orderItems)))
+                )
                 .as(Transaction::withRollback)
                 .as(StepVerifier::create)
                 .assertNext(pair -> {
@@ -137,13 +147,15 @@ public class OrderItemRepositoryTest {
     @Test
     public void testFindByName() {
         var title = UUID.randomUUID().toString();
-        itemService.insert(new Item("123" + title + "456", BigDecimal.valueOf(2.5)))
-                .flatMap(item -> orderService.findNewOrder().map(order -> Pair.of(order, item)))
-                .flatMap(pair -> {
-                    Order order = pair.getLeft();
-                    Item item = pair.getRight();
-                    return orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), title, ItemSort.NO, 10, 1).map(foundItems -> Pair.of(foundItems, item));
-                })
+        userService.insert(new User("name", "")).flatMap(user ->
+                        itemService.insert(new Item("123" + title + "456", BigDecimal.valueOf(2.5)))
+                                .flatMap(item -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(order, item)))
+                                .flatMap(pair -> {
+                                    Order order = pair.getLeft();
+                                    Item item = pair.getRight();
+                                    return orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), title, ItemSort.NO, 10, 1).map(foundItems -> Pair.of(foundItems, item));
+                                })
+                )
                 .as(Transaction::withRollback)
                 .as(StepVerifier::create)
                 .assertNext(pair -> {
@@ -168,13 +180,15 @@ public class OrderItemRepositoryTest {
     @Test
     public void testFindByNamePaginationBegin() {
         var title = UUID.randomUUID().toString();
-        itemService.insert(new Item("1_" + title + "_1", BigDecimal.valueOf(1)))
-                .flatMap(item1 -> itemService.insert(new Item("2_" + title + "_2", BigDecimal.valueOf(2))).map(item2 -> Pair.of(item1, item2)))
-                .flatMap(pair -> orderService.findNewOrder().map(order -> Pair.of(order, pair)))
-                .flatMap(pair -> {
-                    Order order = pair.getLeft();
-                    return orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), title, ItemSort.NO, 1, 1).map(foundItems -> Pair.of(foundItems, pair.getRight()));
-                })
+        userService.insert(new User("name", "")).flatMap(user ->
+                        itemService.insert(new Item("1_" + title + "_1", BigDecimal.valueOf(1)))
+                                .flatMap(item1 -> itemService.insert(new Item("2_" + title + "_2", BigDecimal.valueOf(2))).map(item2 -> Pair.of(item1, item2)))
+                                .flatMap(pair -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(order, pair)))
+                                .flatMap(pair -> {
+                                    Order order = pair.getLeft();
+                                    return orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), title, ItemSort.NO, 1, 1).map(foundItems -> Pair.of(foundItems, pair.getRight()));
+                                })
+                )
                 .as(Transaction::withRollback)
                 .as(StepVerifier::create)
                 .assertNext(pair -> {
@@ -206,13 +220,15 @@ public class OrderItemRepositoryTest {
     @Test
     public void testFindByNamePaginationEnd() {
         var title = UUID.randomUUID().toString();
-        itemService.insert(new Item("1_" + title + "_1", BigDecimal.valueOf(1)))
-                .flatMap(item1 -> itemService.insert(new Item("2_" + title + "_2", BigDecimal.valueOf(2))).map(item2 -> Pair.of(item1, item2)))
-                .flatMap(pair -> orderService.findNewOrder().map(order -> Pair.of(order, pair)))
-                .flatMap(pair -> {
-                    Order order = pair.getLeft();
-                    return orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), title, ItemSort.NO, 1, 2).map(foundItems -> Pair.of(foundItems, pair.getRight()));
-                })
+        userService.insert(new User("name", "")).flatMap(user ->
+                        itemService.insert(new Item("1_" + title + "_1", BigDecimal.valueOf(1)))
+                                .flatMap(item1 -> itemService.insert(new Item("2_" + title + "_2", BigDecimal.valueOf(2))).map(item2 -> Pair.of(item1, item2)))
+                                .flatMap(pair -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(order, pair)))
+                                .flatMap(pair -> {
+                                    Order order = pair.getLeft();
+                                    return orderItemService.findByTitleLikeOrDescriptionLike(order.getId(), title, ItemSort.NO, 1, 2).map(foundItems -> Pair.of(foundItems, pair.getRight()));
+                                })
+                )
                 .as(Transaction::withRollback)
                 .as(StepVerifier::create)
                 .assertNext(pair -> {
@@ -243,13 +259,15 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testFindAll() {
-        itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
-                .flatMap(item -> orderService.findNewOrder().map(order -> Pair.of(order, item)))
-                .flatMap(pair -> {
-                    Order order = pair.getLeft();
-                    Item item = pair.getRight();
-                    return orderItemService.findAll(order.getId(), ItemSort.NO, 10, 1).map(foundItems -> Pair.of(foundItems, item));
-                })
+        userService.insert(new User("name", "")).flatMap(user ->
+                        itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
+                                .flatMap(item -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(order, item)))
+                                .flatMap(pair -> {
+                                    Order order = pair.getLeft();
+                                    Item item = pair.getRight();
+                                    return orderItemService.findAll(order.getId(), ItemSort.NO, 10, 1).map(foundItems -> Pair.of(foundItems, item));
+                                })
+                )
                 .as(Transaction::withRollback)
                 .as(StepVerifier::create)
                 .assertNext(pair -> {
@@ -273,13 +291,15 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testFindAllPaginationBegin() {
-        itemService.insert(new Item("title1", BigDecimal.valueOf(1)))
-                .flatMap(item1 -> itemService.insert(new Item("title2", BigDecimal.valueOf(2))).map(item2 -> Pair.of(item1, item2)))
-                .flatMap(pair -> orderService.findNewOrder().map(order -> Pair.of(order, pair)))
-                .flatMap(pair -> {
-                    Order order = pair.getLeft();
-                    return orderItemService.findAll(order.getId(), ItemSort.NO, 1, 1).map(foundItems -> Pair.of(foundItems, pair.getRight()));
-                })
+        userService.insert(new User("name", "")).flatMap(user ->
+                        itemService.insert(new Item("title1", BigDecimal.valueOf(1)))
+                                .flatMap(item1 -> itemService.insert(new Item("title2", BigDecimal.valueOf(2))).map(item2 -> Pair.of(item1, item2)))
+                                .flatMap(pair -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(order, pair)))
+                                .flatMap(pair -> {
+                                    Order order = pair.getLeft();
+                                    return orderItemService.findAll(order.getId(), ItemSort.NO, 1, 1).map(foundItems -> Pair.of(foundItems, pair.getRight()));
+                                })
+                )
                 .as(Transaction::withRollback)
                 .as(StepVerifier::create)
                 .assertNext(pair -> {
@@ -310,13 +330,15 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testFindAllPaginationEnd() {
-        itemService.insert(new Item("title1", BigDecimal.valueOf(1)))
-                .flatMap(item1 -> itemService.insert(new Item("title2", BigDecimal.valueOf(2))).map(item2 -> Pair.of(item1, item2)))
-                .flatMap(pair -> orderService.findNewOrder().map(order -> Pair.of(order, pair)))
-                .flatMap(pair -> {
-                    Order order = pair.getLeft();
-                    return orderItemService.findAll(order.getId(), ItemSort.NO, 1, 2).map(foundItems -> Pair.of(foundItems, pair.getRight()));
-                })
+        userService.insert(new User("name", "")).flatMap(user ->
+                        itemService.insert(new Item("title1", BigDecimal.valueOf(1)))
+                                .flatMap(item1 -> itemService.insert(new Item("title2", BigDecimal.valueOf(2))).map(item2 -> Pair.of(item1, item2)))
+                                .flatMap(pair -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(order, pair)))
+                                .flatMap(pair -> {
+                                    Order order = pair.getLeft();
+                                    return orderItemService.findAll(order.getId(), ItemSort.NO, 1, 2).map(foundItems -> Pair.of(foundItems, pair.getRight()));
+                                })
+                )
                 .as(Transaction::withRollback)
                 .as(StepVerifier::create)
                 .assertNext(pair -> {
@@ -347,15 +369,17 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testDelete() {
-        itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
-                .flatMap(item -> orderService.findNewOrder().map(order -> Pair.of(order, item)))
-                .flatMap(pair -> {
-                    Order order = pair.getLeft();
-                    Item item = pair.getRight();
-                    return orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1));
-                })
-                .flatMap(orderItem -> orderItemService.deleteById(orderItem.getId()).thenReturn(orderItem))
-                .flatMap(orderItem -> orderItemRepository.existsById(orderItem.getId()))
+        userService.insert(new User("name", "")).flatMap(user ->
+                        itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
+                                .flatMap(item -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(order, item)))
+                                .flatMap(pair -> {
+                                    Order order = pair.getLeft();
+                                    Item item = pair.getRight();
+                                    return orderItemService.insert(new OrderItem(order.getId(), item.getId(), 1));
+                                })
+                                .flatMap(orderItem -> orderItemService.deleteById(orderItem.getId()).thenReturn(orderItem))
+                                .flatMap(orderItem -> orderItemRepository.existsById(orderItem.getId()))
+                )
                 .as(Transaction::withRollback)
                 .as(StepVerifier::create)
                 .assertNext(exists -> {
@@ -368,14 +392,16 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testGetTotalSum() {
-        itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
-                .flatMap(item -> orderService.findNewOrder().map(order -> Pair.of(order, item)))
-                .flatMap(pair -> {
-                    Order order = pair.getLeft();
-                    Item item = pair.getRight();
-                    return orderItemService.insert(new OrderItem(order.getId(), item.getId(), 2));
-                })
-                .flatMap(orderItem -> orderItemService.getTotalSumByOrderId(orderItem.getOrderId()))
+        userService.insert(new User("name", "")).flatMap(user ->
+                        itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
+                                .flatMap(item -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(order, item)))
+                                .flatMap(pair -> {
+                                    Order order = pair.getLeft();
+                                    Item item = pair.getRight();
+                                    return orderItemService.insert(new OrderItem(order.getId(), item.getId(), 2));
+                                })
+                                .flatMap(orderItem -> orderItemService.getTotalSumByOrderId(orderItem.getOrderId()))
+                )
                 .as(Transaction::withRollback)
                 .as(StepVerifier::create)
                 .assertNext(sum -> {

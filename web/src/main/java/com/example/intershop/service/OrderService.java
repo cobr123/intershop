@@ -23,9 +23,9 @@ public class OrderService {
     }
 
     @Cacheable(value = "orders", key = "'new'")
-    public Mono<Order> findNewOrder() {
+    public Mono<Order> findNewOrder(Long userId) {
         return orderRepository.findByStatus(OrderStatus.NEW)
-                .switchIfEmpty(insert(new Order(OrderStatus.NEW)));
+                .switchIfEmpty(insert(new Order(userId, OrderStatus.NEW)));
     }
 
     @CacheEvict(value = "orders", key = "'new'")

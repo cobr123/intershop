@@ -5,26 +5,23 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-    <changeSet id="init_orders" author="roman">
+    <changeSet id="init_users" author="roman">
         <preConditions onFail="WARN">
-            <tableExists tableName="orders"/>
+            <tableExists tableName="users"/>
         </preConditions>
-        <createTable tableName="orders">
+        <createTable tableName="users">
             <column name="id" type="bigserial">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="user_id" type="bigint">
-                <constraints nullable="false" foreignKeyName="fk_orders_user_id" referencedTableName="users" referencedColumnNames="id" deleteCascade="false"/>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
             </column>
-            <column name="status" type="varchar(32)">
+            <column name="password" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <sql indexName="idx_orders_status" tableName="orders">
-            CREATE UNIQUE INDEX uidx_orders_status ON orders (status, user_id) WHERE (status = 'NEW');
-        </sql>
         <rollback>
-            <dropTable tableName="orders"/>
+            <dropTable tableName="users"/>
         </rollback>
     </changeSet>
 </databaseChangeLog>

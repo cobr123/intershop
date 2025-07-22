@@ -4,7 +4,9 @@ import com.example.intershop.IntershopApplicationTests;
 import com.example.intershop.Transaction;
 import com.example.intershop.model.Order;
 import com.example.intershop.model.OrderStatus;
+import com.example.intershop.model.User;
 import com.example.intershop.service.OrderService;
+import com.example.intershop.service.UserService;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import reactor.test.StepVerifier;
 
@@ -24,10 +27,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class OrderRepositoryTest {
 
     @Autowired
+    private UserService userService;
+
+    @Autowired
     private OrderRepository orderRepository;
 
     @Autowired
-    private OrderService service;
+    private OrderService orderService;
 
     @Autowired
     CacheManager cacheManager;
@@ -40,8 +46,9 @@ public class OrderRepositoryTest {
     }
 
     @Test
+    @WithMockUser
     public void testCreate() {
-        service.findNewOrder()
+        userService.insert(new User("name", "")).flatMap(user -> orderService.findNewOrder(user.getId()))
                 .as(Transaction::withRollback)
                 .as(StepVerifier::create)
                 .assertNext(order -> {
@@ -56,9 +63,9 @@ public class OrderRepositoryTest {
 
     @Test
     public void testFindByStatus() {
-        service.insert(new Order(OrderStatus.NEW))
-                .flatMap(order -> service.insert(new Order(OrderStatus.GATHERING)).thenReturn(order))
-                .flatMap(order -> service.findNewOrder().map(foundOrder -> Pair.of(order, foundOrder)))
+        userService.insert(new User("name", "")).flatMap(user -> orderService.insert(new Order(user.getId(), OrderStatus.NEW))
+                        .flatMap(order -> orderService.insert(new Order(user.getId(), OrderStatus.GATHERING)).thenReturn(order))
+                        .flatMap(order -> orderService.findNewOrder(user.getId()).map(foundOrder -> Pair.of(order, foundOrder))))
                 .as(Transaction::withRollback)
                 .as(StepVerifier::create)
                 .assertNext(pair -> {
@@ -77,8 +84,8 @@ public class OrderRepositoryTest {
 
     @Test
     public void testDelete() {
-        service.findNewOrder()
-                .flatMap(order -> service.deleteById(order.getId()).thenReturn(order))
+        userService.insert(new User("name", "")).flatMap(user -> orderService.findNewOrder(user.getId()))
+                .flatMap(order -> orderService.deleteById(order.getId()).thenReturn(order))
                 .flatMap(order -> orderRepository.existsById(order.getId()))
                 .as(Transaction::withRollback)
                 .as(StepVerifier::create)

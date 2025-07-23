@@ -36,6 +36,7 @@ public class MainItemsController {
                 .switchIfEmpty(Mono.just(Optional.empty()))
                 .map(securityContextOptional -> securityContextOptional.flatMap(securityContext -> Optional.ofNullable(securityContext.getAuthentication())))
                 .flatMap(auth -> {
+                    model.addAttribute("isAnonymous", auth.isEmpty());
                     return auth.map(authentication -> userService.findByName(authentication.getName())
                                     .flatMap(user -> orderService.findNewOrder(user.getId()).map(Order::getId))
                                     .map(Optional::of)

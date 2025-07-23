@@ -78,14 +78,14 @@ public class ItemsControllerTest {
 
         var item = new ItemUi(1L, "title1", "description1", "imgPath1", 1, BigDecimal.valueOf(1.1));
 
-        var user = new User(2L, "userName", "");
+        var user = new UserUi(2L, "userName", "");
 
         doReturn(Mono.just(user)).when(userService).findByName(anyString());
         doReturn(Mono.just(order)).when(orderService).findNewOrder(anyLong());
         doReturn(Mono.just(item)).when(orderItemService).findByOrderIdAndItemId(anyLong(), anyLong());
 
         webTestClient
-                .mutateWith(mockUser(user.getUsername()))
+                .mutateWith(mockUser(user.getName()))
                 .mutateWith(csrf())
                 .get().uri("/items/1").exchange()
                 .expectStatus().isOk()
@@ -123,14 +123,14 @@ public class ItemsControllerTest {
 
         var item = new ItemUi(1L, "title1", "description1", "imgPath1", 1, BigDecimal.valueOf(1.1));
 
-        var user = new User(2L, "userName", "");
+        var user = new UserUi(2L, "userName", "");
 
         doReturn(Mono.just(user)).when(userService).findByName(anyString());
         doReturn(Mono.just(order)).when(orderService).findNewOrder(anyLong());
         doReturn(Mono.just(item)).when(orderItemService).update(anyLong(), anyLong(), any());
 
         webTestClient
-                .mutateWith(mockUser(user.getUsername()))
+                .mutateWith(mockUser(user.getName()))
                 .mutateWith(csrf())
                 .post()
                 .uri(uriBuilder -> uriBuilder.path("/items/1")
@@ -167,7 +167,7 @@ public class ItemsControllerTest {
     public void testInsertItem() {
         var item = new Item(1L, "1", "1", "", BigDecimal.valueOf(1));
 
-        var user = new User(2L, "userName", "");
+        var user = new UserUi(2L, "userName", "");
 
         doReturn(Mono.just(user)).when(userService).findByName(anyString());
         doReturn(Mono.just(item)).when(itemService).insert(any());
@@ -178,7 +178,7 @@ public class ItemsControllerTest {
         builder.part("price", BigDecimal.valueOf(1));
 
         webTestClient
-                .mutateWith(mockUser(user.getUsername()))
+                .mutateWith(mockUser(user.getName()))
                 .mutateWith(csrf())
                 .post()
                 .uri("/items")

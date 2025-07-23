@@ -63,7 +63,9 @@ public class MainItemsControllerTest {
                 .expectStatus().isOk()
                 .expectHeader().contentType("text/html")
                 .expectBody()
-                .xpath("//table/tr/td/table/tr/td/a").exists();
+                .xpath("//table/tr/td/table/tr/td/a").exists()
+                .xpath("//body/a/b[contains(., \"Выйти\")]").doesNotExist()
+                .xpath("//body/a/b[contains(., \"Зарегистрироваться\")]").exists();
     }
 
     @Test
@@ -77,20 +79,22 @@ public class MainItemsControllerTest {
         var paging = new Paging(1, 10, false, false);
         Items items = new Items(ItemUi.grouped(List.of(item1, item2)), paging);
 
-        var user = new User(2L, "userName", "");
+        var user = new UserUi(2L, "userName", "");
 
         doReturn(Mono.just(user)).when(userService).findByName(anyString());
         doReturn(Mono.just(order)).when(orderService).findNewOrder(anyLong());
         doReturn(Mono.just(items)).when(orderItemService).findAll(anyLong(), any(), anyInt(), anyInt());
 
         webTestClient
-                .mutateWith(mockUser(user.getUsername()))
+                .mutateWith(mockUser(user.getName()))
                 .mutateWith(csrf())
                 .get().uri("/main/items").exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType("text/html")
                 .expectBody()
-                .xpath("//table/tr/td/table/tr/td/a").exists();
+                .xpath("//table/tr/td/table/tr/td/a").exists()
+                .xpath("//body/a/b[contains(., \"Выйти\")]").exists()
+                .xpath("//body/a/b[contains(., \"Зарегистрироваться\")]").doesNotExist();
     }
 
     @Test
@@ -104,14 +108,14 @@ public class MainItemsControllerTest {
         var paging = new Paging(1, 10, false, false);
         Items items = new Items(ItemUi.grouped(List.of(item1, item2)), paging);
 
-        var user = new User(2L, "userName", "");
+        var user = new UserUi(2L, "userName", "");
 
         doReturn(Mono.just(user)).when(userService).findByName(anyString());
         doReturn(Mono.just(order)).when(orderService).findNewOrder(anyLong());
         doReturn(Mono.just(items)).when(orderItemService).findByTitleLikeOrDescriptionLike(anyLong(), any(), any(), anyInt(), anyInt());
 
         webTestClient
-                .mutateWith(mockUser(user.getUsername()))
+                .mutateWith(mockUser(user.getName()))
                 .mutateWith(csrf())
                 .get()
                 .uri(uriBuilder -> uriBuilder.path("/main/items")
@@ -136,14 +140,14 @@ public class MainItemsControllerTest {
         var paging = new Paging(1, 10, false, false);
         Items items = new Items(ItemUi.grouped(List.of(item1, item2)), paging);
 
-        var user = new User(2L, "userName", "");
+        var user = new UserUi(2L, "userName", "");
 
         doReturn(Mono.just(user)).when(userService).findByName(anyString());
         doReturn(Mono.just(order)).when(orderService).findNewOrder(anyLong());
         doReturn(Mono.just(items)).when(orderItemService).findAll(anyLong(), any(), anyInt(), anyInt());
 
         webTestClient
-                .mutateWith(mockUser(user.getUsername()))
+                .mutateWith(mockUser(user.getName()))
                 .mutateWith(csrf())
                 .get().uri(uriBuilder -> uriBuilder.path("/main/items")
                         .queryParam("pageSize", "10")
@@ -183,14 +187,14 @@ public class MainItemsControllerTest {
 
         var item = new ItemUi(1L, "title1", "description1", "imgPath1", 1, BigDecimal.valueOf(1.1));
 
-        var user = new User(2L, "userName", "");
+        var user = new UserUi(2L, "userName", "");
 
         doReturn(Mono.just(user)).when(userService).findByName(anyString());
         doReturn(Mono.just(order)).when(orderService).findNewOrder(anyLong());
         doReturn(Mono.just(item)).when(orderItemService).update(anyLong(), anyLong(), any());
 
         webTestClient
-                .mutateWith(mockUser(user.getUsername()))
+                .mutateWith(mockUser(user.getName()))
                 .mutateWith(csrf())
                 .post()
                 .uri(uriBuilder -> uriBuilder.path("/main/items/1")

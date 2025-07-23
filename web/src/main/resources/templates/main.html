@@ -7,14 +7,24 @@
 </head>
 
 <body>
-    <a href="/items/add" style="float:right;">
+    <a href="/items/add" style="float:right;" sec:authorize="isAuthenticated()">
         <b>Добавить товар &#10549;</b>
     </a>
-    <a href="/orders" style="float:right;">
+    <a href="/orders" style="float:right;" sec:authorize="isAuthenticated()">
         <b>ЗАКАЗЫ &#10549;</b>
     </a>
-    <a href="/cart/items" style="float:right;">
+    <a href="/cart/items" style="float:right;" sec:authorize="isAuthenticated()">
         <b>КОРЗИНА &#10549;</b>
+    </a>
+    <b sec:authentication="name" sec:authorize="isAuthenticated()"></b>
+    <a href="/logout" style="float:right;" sec:authorize="isAuthenticated()">
+        <b>Выйти &#10549;</b>
+    </a>
+    <a href="/login" style="float:right;" th:if="${isAnonymous}">
+        <b>Войти &#10549;</b>
+    </a>
+    <a href="/register" style="float:right;" th:if="${isAnonymous}">
+        <b>Зарегистрироваться &#10549;</b>
     </a>
     <table style="width:70%;margin-left:auto;margin-right:auto;">
         <tr>

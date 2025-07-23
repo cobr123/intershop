@@ -58,7 +58,7 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testCreate() {
-        userService.insert(new User("name", "")).flatMap(user ->
+        userService.insert(new UserUi("name", "")).flatMap(user ->
                         itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
                                 .flatMap(item -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(item, order)))
                                 .flatMap(pair -> {
@@ -81,7 +81,7 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testChangeCount() {
-        userService.insert(new User("name", "")).flatMap(user ->
+        userService.insert(new UserUi("name", "")).flatMap(user ->
                         itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
                                 .flatMap(item -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(item, order)))
                                 .flatMap(pair -> {
@@ -123,7 +123,7 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testFindByOrderId() {
-        userService.insert(new User("name", "")).flatMap(user ->
+        userService.insert(new UserUi("name", "")).flatMap(user ->
                         itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
                                 .flatMap(item -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(item, order)))
                                 .flatMap(pair -> {
@@ -147,7 +147,7 @@ public class OrderItemRepositoryTest {
     @Test
     public void testFindByName() {
         var title = UUID.randomUUID().toString();
-        userService.insert(new User("name", "")).flatMap(user ->
+        userService.insert(new UserUi("name", "")).flatMap(user ->
                         itemService.insert(new Item("123" + title + "456", BigDecimal.valueOf(2.5)))
                                 .flatMap(item -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(order, item)))
                                 .flatMap(pair -> {
@@ -180,7 +180,7 @@ public class OrderItemRepositoryTest {
     @Test
     public void testFindByNamePaginationBegin() {
         var title = UUID.randomUUID().toString();
-        userService.insert(new User("name", "")).flatMap(user ->
+        userService.insert(new UserUi("name", "")).flatMap(user ->
                         itemService.insert(new Item("1_" + title + "_1", BigDecimal.valueOf(1)))
                                 .flatMap(item1 -> itemService.insert(new Item("2_" + title + "_2", BigDecimal.valueOf(2))).map(item2 -> Pair.of(item1, item2)))
                                 .flatMap(pair -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(order, pair)))
@@ -220,7 +220,7 @@ public class OrderItemRepositoryTest {
     @Test
     public void testFindByNamePaginationEnd() {
         var title = UUID.randomUUID().toString();
-        userService.insert(new User("name", "")).flatMap(user ->
+        userService.insert(new UserUi("name", "")).flatMap(user ->
                         itemService.insert(new Item("1_" + title + "_1", BigDecimal.valueOf(1)))
                                 .flatMap(item1 -> itemService.insert(new Item("2_" + title + "_2", BigDecimal.valueOf(2))).map(item2 -> Pair.of(item1, item2)))
                                 .flatMap(pair -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(order, pair)))
@@ -259,7 +259,7 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testFindAll() {
-        userService.insert(new User("name", "")).flatMap(user ->
+        userService.insert(new UserUi("name", "")).flatMap(user ->
                         itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
                                 .flatMap(item -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(order, item)))
                                 .flatMap(pair -> {
@@ -291,7 +291,7 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testFindAllPaginationBegin() {
-        userService.insert(new User("name", "")).flatMap(user ->
+        userService.insert(new UserUi("name", "")).flatMap(user ->
                         itemService.insert(new Item("title1", BigDecimal.valueOf(1)))
                                 .flatMap(item1 -> itemService.insert(new Item("title2", BigDecimal.valueOf(2))).map(item2 -> Pair.of(item1, item2)))
                                 .flatMap(pair -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(order, pair)))
@@ -330,7 +330,7 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testFindAllPaginationEnd() {
-        userService.insert(new User("name", "")).flatMap(user ->
+        userService.insert(new UserUi("name", "")).flatMap(user ->
                         itemService.insert(new Item("title1", BigDecimal.valueOf(1)))
                                 .flatMap(item1 -> itemService.insert(new Item("title2", BigDecimal.valueOf(2))).map(item2 -> Pair.of(item1, item2)))
                                 .flatMap(pair -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(order, pair)))
@@ -369,7 +369,7 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testDelete() {
-        userService.insert(new User("name", "")).flatMap(user ->
+        userService.insert(new UserUi("name", "")).flatMap(user ->
                         itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
                                 .flatMap(item -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(order, item)))
                                 .flatMap(pair -> {
@@ -392,7 +392,7 @@ public class OrderItemRepositoryTest {
 
     @Test
     public void testGetTotalSum() {
-        userService.insert(new User("name", "")).flatMap(user ->
+        userService.insert(new UserUi("name", "")).flatMap(user ->
                         itemService.insert(new Item("title", BigDecimal.valueOf(2.5)))
                                 .flatMap(item -> orderService.findNewOrder(user.getId()).map(order -> Pair.of(order, item)))
                                 .flatMap(pair -> {

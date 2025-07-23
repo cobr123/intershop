@@ -4,7 +4,7 @@ import com.example.intershop.IntershopApplicationTests;
 import com.example.intershop.Transaction;
 import com.example.intershop.model.Order;
 import com.example.intershop.model.OrderStatus;
-import com.example.intershop.model.User;
+import com.example.intershop.model.UserUi;
 import com.example.intershop.service.OrderService;
 import com.example.intershop.service.UserService;
 import org.apache.commons.lang3.tuple.Pair;
@@ -48,7 +48,7 @@ public class OrderRepositoryTest {
     @Test
     @WithMockUser
     public void testCreate() {
-        userService.insert(new User("name", "")).flatMap(user -> orderService.findNewOrder(user.getId()))
+        userService.insert(new UserUi("name", "")).flatMap(user -> orderService.findNewOrder(user.getId()))
                 .as(Transaction::withRollback)
                 .as(StepVerifier::create)
                 .assertNext(order -> {
@@ -63,7 +63,7 @@ public class OrderRepositoryTest {
 
     @Test
     public void testFindByStatus() {
-        userService.insert(new User("name", "")).flatMap(user -> orderService.insert(new Order(user.getId(), OrderStatus.NEW))
+        userService.insert(new UserUi("name", "")).flatMap(user -> orderService.insert(new Order(user.getId(), OrderStatus.NEW))
                         .flatMap(order -> orderService.insert(new Order(user.getId(), OrderStatus.GATHERING)).thenReturn(order))
                         .flatMap(order -> orderService.findNewOrder(user.getId()).map(foundOrder -> Pair.of(order, foundOrder))))
                 .as(Transaction::withRollback)
@@ -84,7 +84,7 @@ public class OrderRepositoryTest {
 
     @Test
     public void testDelete() {
-        userService.insert(new User("name", "")).flatMap(user -> orderService.findNewOrder(user.getId()))
+        userService.insert(new UserUi("name", "")).flatMap(user -> orderService.findNewOrder(user.getId()))
                 .flatMap(order -> orderService.deleteById(order.getId()).thenReturn(order))
                 .flatMap(order -> orderRepository.existsById(order.getId()))
                 .as(Transaction::withRollback)

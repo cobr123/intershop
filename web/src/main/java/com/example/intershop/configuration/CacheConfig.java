@@ -3,7 +3,7 @@ package com.example.intershop.configuration;
 import com.example.intershop.model.Item;
 import com.example.intershop.model.Items;
 import com.example.intershop.model.Order;
-import com.example.intershop.model.User;
+import com.example.intershop.model.UserUi;
 import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -58,7 +58,7 @@ public class CacheConfig {
                                 .entryTtl(Duration.of(1, ChronoUnit.MINUTES))
                                 .serializeValuesWith(
                                         RedisSerializationContext.SerializationPair.fromSerializer(
-                                                new Jackson2JsonRedisSerializer<>(User.class)
+                                                new Jackson2JsonRedisSerializer<>(UserUi.class)
                                         )
                                 )
                 );

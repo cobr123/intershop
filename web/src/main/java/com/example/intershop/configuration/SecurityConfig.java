@@ -26,6 +26,7 @@ public class SecurityConfig {
         return http
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(HttpMethod.GET, "/", "/main/items", "/items/*", "/images/*").permitAll()
+                        .pathMatchers("/register").permitAll()
                         .anyExchange().authenticated()
                 )
                 .formLogin(withDefaults())

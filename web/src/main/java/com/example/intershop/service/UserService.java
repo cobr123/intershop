@@ -1,6 +1,6 @@
 package com.example.intershop.service;
 
-import com.example.intershop.model.User;
+import com.example.intershop.model.UserUi;
 import com.example.intershop.repository.UserRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -18,22 +18,22 @@ public class UserService {
     }
 
     @Cacheable(value = "users", key = "#name")
-    public Mono<User> findByName(String name) {
+    public Mono<UserUi> findByName(String name) {
         return repository.findByName(name);
     }
 
     @CachePut(value = "users", key = "#user.name")
-    public Mono<User> insert(User user) {
+    public Mono<UserUi> insert(UserUi user) {
         return repository.save(user);
     }
 
     @CachePut(value = "users", key = "#user.name")
-    public Mono<User> update(User user) {
+    public Mono<UserUi> update(UserUi user) {
         return repository.save(user);
     }
 
     @CacheEvict(value = "users", key = "#result.name")
-    public Mono<User> deleteById(Long id) {
+    public Mono<UserUi> deleteById(Long id) {
         return repository.findById(id)
                 .flatMap(u -> repository.deleteById(id).thenReturn(u));
     }

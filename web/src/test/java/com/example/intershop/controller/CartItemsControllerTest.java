@@ -83,7 +83,7 @@ public class CartItemsControllerTest {
         var get200Response = new BalanceGet200Response();
         get200Response.setBalance(BigDecimal.ONE);
 
-        var user = new User(2L, "userName", "");
+        var user = new UserUi(2L, "userName", "");
 
         doReturn(Mono.just(user)).when(userService).findByName(anyString());
         doReturn(Mono.just(order)).when(orderService).findNewOrder(anyLong());
@@ -91,7 +91,7 @@ public class CartItemsControllerTest {
         doReturn(Mono.just(ResponseEntity.ok(get200Response))).when(api).balanceGetWithHttpInfo();
 
         webTestClient
-                .mutateWith(mockUser(user.getUsername()))
+                .mutateWith(mockUser(user.getName()))
                 .mutateWith(csrf())
                 .get().uri("/cart/items").exchange()
                 .expectStatus().isOk()
@@ -128,14 +128,14 @@ public class CartItemsControllerTest {
 
         var item = new ItemUi(1L, "title1", "description1", "imgPath1", 1, BigDecimal.valueOf(1.1));
 
-        var user = new User(2L, "userName", "");
+        var user = new UserUi(2L, "userName", "");
 
         doReturn(Mono.just(user)).when(userService).findByName(anyString());
         doReturn(Mono.just(order)).when(orderService).findNewOrder(anyLong());
         doReturn(Mono.just(item)).when(orderItemService).update(anyLong(), anyLong(), any());
 
         webTestClient
-                .mutateWith(mockUser(user.getUsername()))
+                .mutateWith(mockUser(user.getName()))
                 .mutateWith(csrf())
                 .post()
                 .uri(uriBuilder -> uriBuilder.path("/cart/items/1")

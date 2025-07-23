@@ -4,7 +4,7 @@ import com.example.intershop.api.DefaultApi;
 import com.example.intershop.configuration.SecurityConfig;
 import com.example.intershop.model.Order;
 import com.example.intershop.model.OrderStatus;
-import com.example.intershop.model.User;
+import com.example.intershop.model.UserUi;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
 import com.example.intershop.service.UserService;
@@ -65,7 +65,7 @@ public class BuyControllerTest {
         order.setId(1L);
         order.setStatus(OrderStatus.NEW);
 
-        var user = new User(2L, "userName", "");
+        var user = new UserUi(2L, "userName", "");
 
         doReturn(Mono.just(user)).when(userService).findByName(anyString());
         doReturn(Mono.just(order)).when(orderService).findNewOrder(anyLong());
@@ -74,7 +74,7 @@ public class BuyControllerTest {
         doReturn(Mono.just(order)).when(orderService).changeNewStatusToGathering(any());
 
         webTestClient
-                .mutateWith(mockUser(user.getUsername()))
+                .mutateWith(mockUser(user.getName()))
                 .mutateWith(csrf())
                 .post().uri("/buy").exchange()
                 .expectStatus().is3xxRedirection()

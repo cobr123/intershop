@@ -10,6 +10,10 @@
 <a href="/cart/items" style="float:right;">
     <b>КОРЗИНА &#10549;</b>
 </a>
+<b sec:authentication="name" sec:authorize="isAuthenticated()"></b>
+<a href="/logout" style="float:right;" sec:authorize="isAuthenticated()">
+    <b>Выйти &#10549;</b>
+</a>
 <a href="/main/items" style="float:right;">
     <b>ГЛАВНАЯ &#10549;</b>
 </a>

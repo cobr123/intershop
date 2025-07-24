@@ -12,9 +12,9 @@ import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.authentication.logout.HttpStatusReturningServerLogoutSuccessHandler;
+import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler;
 
-import static org.springframework.security.config.Customizer.withDefaults;
+import java.net.URI;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -23,16 +23,22 @@ public class SecurityConfig {
 
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+        var logoutSuccessHandler = new RedirectServerLogoutSuccessHandler();
+        logoutSuccessHandler.setLogoutSuccessUrl(URI.create("/"));
+
         return http
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(HttpMethod.GET, "/", "/main/items", "/items/*", "/images/*").permitAll()
                         .pathMatchers("/register").permitAll()
+                        .pathMatchers("/login").permitAll()
                         .anyExchange().authenticated()
                 )
-                .formLogin(withDefaults())
+                .formLogin(form -> form
+                        .loginPage("/login")
+                )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessHandler(new HttpStatusReturningServerLogoutSuccessHandler())
+                        .logoutSuccessHandler(logoutSuccessHandler)
                 )
                 .build();
     }

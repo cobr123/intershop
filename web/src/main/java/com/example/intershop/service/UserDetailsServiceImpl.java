@@ -1,6 +1,5 @@
-package com.example.intershop.repository;
+package com.example.intershop.service;
 
-import com.example.intershop.service.UserService;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.User;

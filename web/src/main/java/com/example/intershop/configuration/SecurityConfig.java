@@ -1,6 +1,6 @@
 package com.example.intershop.configuration;
 
-import com.example.intershop.repository.UserDetailsServiceImpl;
+import com.example.intershop.service.UserDetailsServiceImpl;
 import com.example.intershop.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -17,6 +17,12 @@ services:
       target: rest
     ports:
       - '8081:8080'
+    depends_on:
+      - db
+    environment:
+      - spring.r2dbc.url=r2dbc:postgresql://db:5432/intershop
+      - spring.r2dbc.username=root
+      - spring.r2dbc.password=root
 
   web:
     build:

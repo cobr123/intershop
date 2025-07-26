@@ -10,6 +10,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Controller
@@ -26,6 +27,13 @@ public class ImageController {
     @ResponseBody
     public Mono<byte[]> get(@PathVariable("id") Long id) {
         return itemService.findById(id)
-                .flatMap(item -> Mono.fromCallable(() -> Files.readAllBytes(Paths.get(item.getImgPath()))).subscribeOn(Schedulers.boundedElastic()));
+                .flatMap(item -> Mono.fromCallable(() -> {
+                            if (item.getImgPath() != null && Files.exists(Path.of(item.getImgPath()))) {
+                                return Files.readAllBytes(Paths.get(item.getImgPath()));
+                            } else {
+                                return new byte[0];
+                            }
+                        })
+                        .subscribeOn(Schedulers.boundedElastic()));
     }
 }

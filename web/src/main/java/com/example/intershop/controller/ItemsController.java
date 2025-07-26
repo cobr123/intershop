@@ -16,7 +16,6 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.io.File;
 import java.security.Principal;
@@ -78,21 +77,22 @@ public class ItemsController {
 
     @PostMapping
     public Mono<String> insert(AddItemForm addItemForm, BindingResult errors) {
-        return Mono.fromCallable(() -> {
-                    Item item = new Item();
-
+        return Mono.just(new Item())
+                .flatMap(item -> {
                     if (addItemForm.getImage() != null) {
                         File imageFile = new File(image_dir, UUID.randomUUID().toString());
-                        addItemForm.getImage().transferTo(imageFile.toPath()).block();
                         item.setImgPath(imageFile.getAbsolutePath());
+                        return addItemForm.getImage().transferTo(imageFile.toPath()).thenReturn(item);
+                    } else {
+                        return Mono.just(item);
                     }
-
+                })
+                .map(item -> {
                     item.setTitle(addItemForm.getTitle());
                     item.setDescription(addItemForm.getDescription());
                     item.setPrice(addItemForm.getPrice());
                     return item;
                 })
-                .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(itemService::insert)
                 .map(insertedItem -> "redirect:/items/" + insertedItem.getId());
     }

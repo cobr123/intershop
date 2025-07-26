@@ -1,17 +1,14 @@
 package com.example.intershop.api;
 
+import com.example.intershop.domain.BalanceGetRequest;
 import com.example.intershop.domain.BalanceGet200Response;
 import com.example.intershop.domain.BalancePostRequest;
 import com.example.intershop.service.UserBalanceService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
-import java.security.Principal;
 
 @Controller
 public class BalanceApiImpl implements BalanceApi {
@@ -23,11 +20,10 @@ public class BalanceApiImpl implements BalanceApi {
     }
 
     @Override
-    public Mono<ResponseEntity<BalanceGet200Response>> balanceGet(ServerWebExchange exchange) {
-        return ReactiveSecurityContextHolder.getContext()
-                .map(SecurityContext::getAuthentication)
-                .map(Principal::getName)
-                .flatMap(userBalanceService::findByUserName)
+    public Mono<ResponseEntity<BalanceGet200Response>> balanceGet(Mono<BalanceGetRequest> balanceGetRequest, ServerWebExchange exchange) {
+        return balanceGetRequest
+                .map(BalanceGetRequest::getId)
+                .flatMap(userBalanceService::findById)
                 .map(userBalance -> {
                     var body = new BalanceGet200Response();
                     body.setBalance(userBalance.getBalance());
@@ -38,10 +34,8 @@ public class BalanceApiImpl implements BalanceApi {
 
     @Override
     public Mono<ResponseEntity<Void>> balancePost(Mono<BalancePostRequest> balancePostRequest, ServerWebExchange exchange) {
-        return ReactiveSecurityContextHolder.getContext()
-                .map(SecurityContext::getAuthentication)
-                .map(Principal::getName)
-                .flatMap(userBalanceService::findByUserName).zipWith(balancePostRequest)
+        return balancePostRequest
+                .flatMap(r -> userBalanceService.findById(r.getId()).zipWith(Mono.just(r)))
                 .flatMap(pair -> {
                     var userBalance = pair.getT1();
                     var sumObj = pair.getT2();

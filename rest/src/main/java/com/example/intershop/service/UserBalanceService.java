@@ -14,8 +14,8 @@ public class UserBalanceService {
         this.repository = repository;
     }
 
-    public Mono<UserBalance> findByUserName(String userName) {
-        return repository.findByUserName(userName);
+    public Mono<UserBalance> findById(Long userId) {
+        return repository.findById(userId);
     }
 
     public Mono<UserBalance> save(UserBalance userBalance) {

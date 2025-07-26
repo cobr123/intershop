@@ -2,6 +2,8 @@ package com.example.intershop.controller;
 
 import com.example.intershop.api.DefaultApi;
 import com.example.intershop.domain.BalancePostRequest;
+import com.example.intershop.model.Order;
+import com.example.intershop.model.UserUi;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
 import com.example.intershop.service.UserService;
@@ -56,12 +58,14 @@ public class BuyController {
                 .map(SecurityContext::getAuthentication)
                 .map(Principal::getName)
                 .flatMap(userService::findByName)
-                .flatMap(user -> orderService.findNewOrder(user.getId()))
-                .flatMap(order -> orderItemService.getTotalSumByOrderId(order.getId()).zipWith(Mono.just(order)))
+                .flatMap(user -> orderService.findNewOrder(user.getId()).zipWith(Mono.just(user)))
+                .flatMap(pair -> orderItemService.getTotalSumByOrderId(pair.getT1().getId()).zipWith(Mono.just(pair)))
                 .flatMap(pair -> {
                     var sum = pair.getT1();
-                    var order = pair.getT2();
+                    Order order = pair.getT2().getT1();
+                    UserUi user = pair.getT2().getT2();
                     var postBody = new BalancePostRequest();
+                    postBody.setId(user.getId());
                     postBody.setSum(sum);
 
                     return manager.authorize(OAuth2AuthorizeRequest

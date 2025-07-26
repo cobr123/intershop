@@ -1,6 +1,7 @@
 package com.example.intershop.controller;
 
 import com.example.intershop.api.DefaultApi;
+import com.example.intershop.domain.BalanceGetRequest;
 import com.example.intershop.model.*;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
@@ -58,10 +59,10 @@ public class CartItemsController {
                 .map(SecurityContext::getAuthentication)
                 .map(Principal::getName)
                 .flatMap(userService::findByName)
-                .flatMap(user -> orderService.findNewOrder(user.getId()))
-                .flatMap(order -> orderItemService.findByOrderId(order.getId())
+                .flatMap(user -> orderService.findNewOrder(user.getId()).zipWith(Mono.just(user)))
+                .flatMap(pair -> orderItemService.findByOrderId(pair.getT1().getId())
                         .collectList()
-                        .map(items -> Pair.of(order.getId(), items))
+                        .map(items -> Pair.of(pair, items))
                 )
                 .flatMap(pair -> manager.authorize(OAuth2AuthorizeRequest
                                         .withClientRegistrationId("keycloak-rest-client")
@@ -71,8 +72,10 @@ public class CartItemsController {
                                 .map(OAuth2AuthorizedClient::getAccessToken)
                                 .map(OAuth2AccessToken::getTokenValue)
                                 .flatMap(accessToken -> {
+                                    var balanceGetRequest = new BalanceGetRequest();
+                                    balanceGetRequest.setId(pair.getFirst().getT2().getId());
                                     api.getApiClient().addDefaultHeader("Authorization", "Bearer " + accessToken);
-                                    return api.balanceGetWithHttpInfo().timeout(Duration.of(5, ChronoUnit.SECONDS));
+                                    return api.balanceGetWithHttpInfo(balanceGetRequest).timeout(Duration.of(5, ChronoUnit.SECONDS));
                                 })
                                 .map(resp -> {
                                     if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
@@ -89,10 +92,10 @@ public class CartItemsController {
                                 .defaultIfEmpty(Pair.of(pair, BigDecimal.ONE.negate()))
                 )
                 .map(pair -> {
-                    var orderId = pair.getFirst().getFirst();
+                    Order order = pair.getFirst().getFirst().getT1();
                     var items = pair.getFirst().getSecond();
                     var balance = pair.getSecond();
-                    OrderUi orderUi = new OrderUi(orderId, items);
+                    OrderUi orderUi = new OrderUi(order.getId(), items);
                     model.addAttribute("items", items);
                     model.addAttribute("total", orderUi.totalSum());
                     model.addAttribute("empty", items.isEmpty());

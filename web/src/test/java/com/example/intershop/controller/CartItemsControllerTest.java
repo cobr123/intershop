@@ -3,6 +3,7 @@ package com.example.intershop.controller;
 import com.example.intershop.api.DefaultApi;
 import com.example.intershop.configuration.SecurityConfig;
 import com.example.intershop.domain.BalanceGet200Response;
+import com.example.intershop.domain.BalanceGetRequest;
 import com.example.intershop.model.*;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
@@ -60,12 +61,15 @@ public class CartItemsControllerTest {
 
         var item = new ItemUi(1L, "title1", "description1", "imgPath1", 1, BigDecimal.valueOf(1.1));
 
+        var balanceGetRequest = new BalanceGetRequest();
+        balanceGetRequest.setId(1L);
+
         var get200Response = new BalanceGet200Response();
         get200Response.setBalance(BigDecimal.ONE);
 
         doReturn(Mono.just(order)).when(orderService).findNewOrder(anyLong());
         doReturn(Flux.just(item)).when(orderItemService).findByOrderId(anyLong());
-        doReturn(Mono.just(ResponseEntity.ok(get200Response))).when(api).balanceGetWithHttpInfo();
+        doReturn(Mono.just(ResponseEntity.ok(get200Response))).when(api).balanceGetWithHttpInfo(balanceGetRequest);
 
         webTestClient.get().uri("/cart/items").exchange()
                 .expectStatus().is3xxRedirection()
@@ -80,6 +84,9 @@ public class CartItemsControllerTest {
 
         var item = new ItemUi(1L, "title1", "description1", "imgPath1", 1, BigDecimal.valueOf(1.1));
 
+        var balanceGetRequest = new BalanceGetRequest();
+        balanceGetRequest.setId(1L);
+
         var get200Response = new BalanceGet200Response();
         get200Response.setBalance(BigDecimal.ONE);
 
@@ -88,7 +95,7 @@ public class CartItemsControllerTest {
         doReturn(Mono.just(user)).when(userService).findByName(anyString());
         doReturn(Mono.just(order)).when(orderService).findNewOrder(anyLong());
         doReturn(Flux.just(item)).when(orderItemService).findByOrderId(anyLong());
-        doReturn(Mono.just(ResponseEntity.ok(get200Response))).when(api).balanceGetWithHttpInfo();
+        doReturn(Mono.just(ResponseEntity.ok(get200Response))).when(api).balanceGetWithHttpInfo(balanceGetRequest);
 
         webTestClient
                 .mutateWith(mockUser(user.getName()))

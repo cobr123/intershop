@@ -17,6 +17,7 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,7 +56,7 @@ public class RegisterController {
                 }).defaultIfEmpty(form.getUsername()))
                 .flatMap(name -> {
                     UserDetails newUser = User.withUsername(form.getUsername()).password(form.getPassword()).passwordEncoder(passwordEncoder::encode).build();
-                    return userService.insert(new UserUi(form.getUsername(), newUser.getPassword()));
+                    return userService.insert(new UserUi(form.getUsername(), newUser.getPassword(), BigDecimal.valueOf(1000)));
                 })
                 .flatMap(userUi -> {
                     return exchange.getSession()

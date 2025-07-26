@@ -8,6 +8,6 @@ import reactor.core.publisher.Mono;
 
 @Repository
 public interface UserBalanceRepository extends ReactiveCrudRepository<UserBalance, Long> {
-    @Query("select ub.id, ub.user_id, ub.balance user_balance ub join users u on u.id = ub.user_id where u.name = :userName")
+    @Query("select u.id, u.balance users u where u.name = :userName")
     Mono<UserBalance> findByUserName(String userName);
 }

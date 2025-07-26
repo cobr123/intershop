@@ -6,12 +6,10 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
 
-@Table(name = "user_balance")
+@Table(name = "users")
 public class UserBalance {
     @Id
     private Long id;
-    @Column
-    private Long userId;
     @Column
     private BigDecimal balance;
 
@@ -29,14 +27,6 @@ public class UserBalance {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
     }
 
     public BigDecimal getBalance() {

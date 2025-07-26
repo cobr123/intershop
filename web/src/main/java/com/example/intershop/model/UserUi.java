@@ -4,6 +4,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.math.BigDecimal;
+
 @Table(name = "users")
 public class UserUi {
     @Id
@@ -12,6 +14,8 @@ public class UserUi {
     private String name;
     @Column
     private String password;
+    @Column
+    private BigDecimal balance;
 
     public UserUi() {
     }
@@ -25,6 +29,12 @@ public class UserUi {
     public UserUi(String name, String password) {
         this.name = name;
         this.password = password;
+    }
+
+    public UserUi(String name, String password, BigDecimal balance) {
+        this.name = name;
+        this.password = password;
+        this.balance = balance;
     }
 
     public Long getId() {

@@ -1,0 +1,26 @@
+items:
+  image_dir: './items_images'
+
+spring:
+  application:
+    name: web
+  liquibase:
+    change-log: 'classpath:/db/changelog/liquibase/main.xml'
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            authorization-uri: http://localhost:8082/realms/master/protocol/openid-connect/auth
+            token-uri: http://localhost:8082/realms/master/protocol/openid-connect/token
+            user-info-uri: http://localhost:8082/realms/master/protocol/openid-connect/userinfo
+            user-name-attribute: sub
+            jwk-set-uri: http://localhost:8082/realms/master/protocol/openid-connect/certs
+        registration:
+          keycloak:
+            authorizationGrantType: authorization_code
+            provider: keycloak
+            client-id: rest-client
+            client-secret: 8lHWta5ggYFsrJN5eUEKn3j8YmZqLbSl
+            redirect-uri: '{baseUrl}/{action}/oauth2/code/{registrationId}'
+            scope: openid, profile, email

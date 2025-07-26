@@ -6,6 +6,8 @@ paths:
   /balance:
     get:
       summary: Получение баланса на счёте
+      security:
+        - ClientCredentialsAuth: []
       responses:
         '200':
           description: Баланс на счёте
@@ -21,6 +23,8 @@ paths:
                   - balance
     post:
       summary: Осуществление платежа
+      security:
+        - ClientCredentialsAuth: []
       requestBody:
         content:
           application/json:
@@ -39,3 +43,15 @@ paths:
           description: Баланс успешно уменьшен
         '409':
           description: Недостаточно средств
+
+components:
+  securitySchemes:
+    ClientCredentialsAuth:
+      type: oauth2
+      description: This API uses OAuth 2.0 with the client credentials grant flow.
+      flows:
+        clientCredentials:
+          tokenUrl: http://localhost:8082/oauth2/token
+          scopes:
+            read: Grants read access to resources.
+            write: Grants write access to resources.

@@ -36,7 +36,7 @@ services:
       - db
       - keycloak
     environment:
-      - spring.security.oauth2.resourceserver.jwt.issuer-uri=http://keycloak/issuer
+      - spring.security.oauth2.resourceserver.jwt.issuer-uri=http://keycloak:8080/realms/master
       - spring.r2dbc.url=r2dbc:postgresql://db:5432/intershop
       - spring.r2dbc.username=root
       - spring.r2dbc.password=root
@@ -52,6 +52,7 @@ services:
       - rest
       - keycloak
     environment:
+      - spring.security.oauth2.client.provider.keycloak.issuer-uri=http://keycloak:8080/realms/master
       - DB_NAME=intershop
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root

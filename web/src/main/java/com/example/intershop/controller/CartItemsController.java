@@ -64,14 +64,14 @@ public class CartItemsController {
                         .map(items -> Pair.of(order.getId(), items))
                 )
                 .flatMap(pair -> manager.authorize(OAuth2AuthorizeRequest
-                                        .withClientRegistrationId("keycloak")
-                                        .principal("rest-client")
+                                        .withClientRegistrationId("keycloak-rest-client")
+                                        .principal("system")
                                         .build()
                                 )
                                 .map(OAuth2AuthorizedClient::getAccessToken)
                                 .map(OAuth2AccessToken::getTokenValue)
                                 .flatMap(accessToken -> {
-                                    api.getApiClient().setBearerToken(accessToken);
+                                    api.getApiClient().addDefaultHeader("Authorization", "Bearer " + accessToken);
                                     return api.balanceGetWithHttpInfo().timeout(Duration.of(5, ChronoUnit.SECONDS));
                                 })
                                 .map(resp -> {

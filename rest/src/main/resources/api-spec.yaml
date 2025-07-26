@@ -7,7 +7,7 @@ paths:
     get:
       summary: Получение баланса на счёте
       security:
-        - ClientCredentialsAuth: []
+        - keycloak_oauth: []
       responses:
         '200':
           description: Баланс на счёте
@@ -24,7 +24,7 @@ paths:
     post:
       summary: Осуществление платежа
       security:
-        - ClientCredentialsAuth: []
+        - keycloak_oauth: []
       requestBody:
         content:
           application/json:
@@ -46,12 +46,14 @@ paths:
 
 components:
   securitySchemes:
-    ClientCredentialsAuth:
+    keycloak_oauth:
       type: oauth2
-      description: This API uses OAuth 2.0 with the client credentials grant flow.
+      description: Keycloak OAuth2 authentication
       flows:
-        clientCredentials:
-          tokenUrl: http://localhost:8082/oauth2/token
+        authorizationCode:
+          authorizationUrl: http://localhost:8082/realms/master/protocol/openid-connect/auth
+          tokenUrl: http://localhost:8082/realms/master/protocol/openid-connect/token
           scopes:
-            read: Grants read access to resources.
-            write: Grants write access to resources.
+            openid: OpenID Connect scope
+            profile: User profile information
+            email: User email address

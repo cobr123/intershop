@@ -5,6 +5,8 @@ import com.example.intershop.domain.BalancePostRequest;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
 import com.example.intershop.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
@@ -23,6 +25,8 @@ import java.time.temporal.ChronoUnit;
 @Controller
 @RequestMapping("/buy")
 public class BuyController {
+
+    private static final Logger log = LoggerFactory.getLogger(BuyController.class);
 
     private final OrderService orderService;
     private final OrderItemService orderItemService;
@@ -61,14 +65,14 @@ public class BuyController {
                     postBody.setSum(sum);
 
                     return manager.authorize(OAuth2AuthorizeRequest
-                                    .withClientRegistrationId("keycloak")
-                                    .principal("rest-client")
+                                    .withClientRegistrationId("keycloak-rest-client")
+                                    .principal("system")
                                     .build()
                             )
                             .map(OAuth2AuthorizedClient::getAccessToken)
                             .map(OAuth2AccessToken::getTokenValue)
                             .flatMap(accessToken -> {
-                                api.getApiClient().setBearerToken(accessToken);
+                                api.getApiClient().addDefaultHeader("Authorization", "Bearer " + accessToken);
                                 return api.balancePostWithHttpInfo(postBody);
                             })
                             .timeout(Duration.of(5, ChronoUnit.SECONDS))
@@ -77,6 +81,7 @@ public class BuyController {
                                     return orderService.changeNewStatusToGathering(order)
                                             .thenReturn("redirect:/orders/" + order.getId() + "?newOrder=true");
                                 } else {
+                                    log.error("resp = {}", resp);
                                     return Mono.just("redirect:/cart/items");
                                 }
                             })

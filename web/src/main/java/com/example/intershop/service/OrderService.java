@@ -22,20 +22,20 @@ public class OrderService {
         this.orderItemRepository = orderItemRepository;
     }
 
-    @Cacheable(value = "orders", key = "'new'")
+    @Cacheable(value = "orders", key = "'new' + '_' + #userId")
     public Mono<Order> findNewOrder(Long userId) {
-        return orderRepository.findByStatus(OrderStatus.NEW)
+        return orderRepository.findByUserIdAndStatus(userId, OrderStatus.NEW)
                 .switchIfEmpty(insert(new Order(userId, OrderStatus.NEW)));
     }
 
-    @CacheEvict(value = "orders", key = "'new'")
+    @CacheEvict(value = "orders", key = "'new' + '_' + #order.userId")
     public Mono<Order> changeNewStatusToGathering(Order order) {
         order.setStatus(OrderStatus.GATHERING);
         return update(order);
     }
 
-    public Flux<Order> findAllNotNew() {
-        return orderRepository.findByStatusIsNot(OrderStatus.NEW);
+    public Flux<Order> findAllNotNew(Long userId) {
+        return orderRepository.findByUserIdAndStatusIsNot(userId, OrderStatus.NEW);
     }
 
     @Cacheable(value = "orders", key = "#id")

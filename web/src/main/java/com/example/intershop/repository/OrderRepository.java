@@ -9,6 +9,7 @@ import reactor.core.publisher.Mono;
 
 @Repository
 public interface OrderRepository extends ReactiveCrudRepository<Order, Long> {
-    Mono<Order> findByStatus(OrderStatus status);
-    Flux<Order> findByStatusIsNot(OrderStatus status);
+    Mono<Order> findByUserIdAndStatus(Long userId, OrderStatus status);
+
+    Flux<Order> findByUserIdAndStatusIsNot(Long userId, OrderStatus status);
 }

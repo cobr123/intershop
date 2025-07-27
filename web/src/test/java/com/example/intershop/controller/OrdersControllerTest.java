@@ -53,7 +53,7 @@ public class OrdersControllerTest {
 
         var item = new ItemUi(1L, "title1", "description1", "imgPath1", 1, BigDecimal.valueOf(1.1));
 
-        doReturn(Flux.just(order)).when(orderService).findAllNotNew();
+        doReturn(Flux.just(order)).when(orderService).findAllNotNew(anyLong());
         doReturn(Flux.just(item)).when(orderItemService).findByOrderId(anyLong());
 
         webTestClient.get().uri("/orders").exchange()

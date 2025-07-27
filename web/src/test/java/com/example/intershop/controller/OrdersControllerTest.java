@@ -11,6 +11,8 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -34,6 +36,11 @@ public class OrdersControllerTest {
     @MockitoBean
     private UserService userService;
 
+    @MockitoBean
+    private ReactiveClientRegistrationRepository clientRegistrationRepository;
+    @MockitoBean
+    private ReactiveOAuth2AuthorizedClientService authorizedClientService;
+
     @Autowired
     private WebTestClient webTestClient;
 
@@ -53,6 +60,9 @@ public class OrdersControllerTest {
 
         var item = new ItemUi(1L, "title1", "description1", "imgPath1", 1, BigDecimal.valueOf(1.1));
 
+        var user = new UserUi(2L, "userName", "");
+
+        doReturn(Mono.just(user)).when(userService).findByName(anyString());
         doReturn(Flux.just(order)).when(orderService).findAllNotNew(anyLong());
         doReturn(Flux.just(item)).when(orderItemService).findByOrderId(anyLong());
 

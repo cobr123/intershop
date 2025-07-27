@@ -11,6 +11,8 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
@@ -34,6 +36,11 @@ public class MainItemsControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private ReactiveClientRegistrationRepository clientRegistrationRepository;
+    @MockitoBean
+    private ReactiveOAuth2AuthorizedClientService authorizedClientService;
 
     @Autowired
     private WebTestClient webTestClient;
@@ -174,7 +181,8 @@ public class MainItemsControllerTest {
                 .uri(uriBuilder -> uriBuilder.path("/main/items/1")
                         .queryParam("action", "PLUS").build()
                 ).exchange()
-                .expectStatus().isForbidden();
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueEquals("Location", "/login");
 
         verify(orderItemService, never()).update(any(), any(), any());
     }

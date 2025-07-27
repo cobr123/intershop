@@ -26,11 +26,6 @@ public class UserUi {
         this.password = password;
     }
 
-    public UserUi(String name, String password) {
-        this.name = name;
-        this.password = password;
-    }
-
     public UserUi(String name, String password, BigDecimal balance) {
         this.name = name;
         this.password = password;

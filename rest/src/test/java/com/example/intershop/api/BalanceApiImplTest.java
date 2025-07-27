@@ -1,8 +1,7 @@
 package com.example.intershop.api;
 
 import com.example.intershop.configuration.SecurityConfig;
-import com.example.intershop.domain.BalanceGet200Response;
-import com.example.intershop.domain.BalancePostRequest;
+import com.example.intershop.domain.*;
 import com.example.intershop.model.UserBalance;
 import com.example.intershop.service.UserBalanceService;
 import org.junit.jupiter.api.AfterEach;
@@ -11,7 +10,9 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -28,6 +29,9 @@ public class BalanceApiImplTest {
 
     @MockitoBean
     private UserBalanceService userBalanceService;
+
+    @MockitoBean
+    private ReactiveJwtDecoder reactiveJwtDecoder;
 
     @Autowired
     private WebTestClient webTestClient;
@@ -46,9 +50,16 @@ public class BalanceApiImplTest {
         var expectedBalance = new BalanceGet200Response();
         expectedBalance.setBalance(userBalance.getBalance());
 
-        doReturn(Mono.just(userBalance)).when(userBalanceService).findByUserName(anyString());
+        doReturn(Mono.just(userBalance)).when(userBalanceService).findById(anyLong());
 
-        webTestClient.get().uri("/balance").exchange()
+        var getBody = new BalanceGetRequest();
+        getBody.setId(userBalance.getId());
+
+        webTestClient
+                .method(HttpMethod.GET)
+                .uri("/balance")
+                .bodyValue(getBody)
+                .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType("application/json")
                 .expectBody(BalanceGet200Response.class)
@@ -57,7 +68,15 @@ public class BalanceApiImplTest {
 
     @Test
     public void getBalanceWoAuthTest() {
-        webTestClient.get().uri("/balance").exchange()
+        var userBalance = new UserBalance(1L, new BigDecimal(1000));
+        var getBody = new BalanceGetRequest();
+        getBody.setId(userBalance.getId());
+
+        webTestClient
+                .method(HttpMethod.GET)
+                .uri("/balance")
+                .bodyValue(getBody)
+                .exchange()
                 .expectStatus().isUnauthorized()
                 .expectBody().isEmpty();
     }
@@ -68,9 +87,10 @@ public class BalanceApiImplTest {
         var userBalance = new UserBalance(1L, new BigDecimal(1000));
 
         var postBody = new BalancePostRequest();
+        postBody.setId(userBalance.getId());
         postBody.setSum(new BigDecimal(100));
 
-        doReturn(Mono.just(userBalance)).when(userBalanceService).findByUserName(anyString());
+        doReturn(Mono.just(userBalance)).when(userBalanceService).findById(anyLong());
         doReturn(Mono.just(userBalance)).when(userBalanceService).save(any());
 
         webTestClient.post()
@@ -80,10 +100,17 @@ public class BalanceApiImplTest {
                 .expectStatus().isOk()
                 .expectBody().isEmpty();
 
+        var getBody = new BalanceGetRequest();
+        getBody.setId(userBalance.getId());
+
         var expectedBalance = new BalanceGet200Response();
         expectedBalance.setBalance(new BigDecimal(900));
 
-        webTestClient.get().uri("/balance").exchange()
+        webTestClient
+                .method(HttpMethod.GET)
+                .uri("/balance")
+                .bodyValue(getBody)
+                .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType("application/json")
                 .expectBody(BalanceGet200Response.class)
@@ -92,7 +119,9 @@ public class BalanceApiImplTest {
 
     @Test
     public void reduceBalanceWoAuthTest() {
+        var userBalance = new UserBalance(1L, new BigDecimal(1000));
         var postBody = new BalancePostRequest();
+        postBody.setId(userBalance.getId());
         postBody.setSum(new BigDecimal(100));
 
         webTestClient.post()
@@ -104,7 +133,7 @@ public class BalanceApiImplTest {
 
         webTestClient.get().uri("/balance").exchange()
                 .expectStatus().isUnauthorized()
-                .expectBody().isEmpty();;
+                .expectBody().isEmpty();
     }
 
     @Test
@@ -113,9 +142,10 @@ public class BalanceApiImplTest {
         var userBalance = new UserBalance(1L, new BigDecimal(1000));
 
         var postBody = new BalancePostRequest();
+        postBody.setId(userBalance.getId());
         postBody.setSum(new BigDecimal(1100));
 
-        doReturn(Mono.just(userBalance)).when(userBalanceService).findByUserName(anyString());
+        doReturn(Mono.just(userBalance)).when(userBalanceService).findById(anyLong());
 
         webTestClient.post()
                 .uri("/balance")
@@ -127,7 +157,9 @@ public class BalanceApiImplTest {
 
     @Test
     public void overReduceBalanceWoAuthTest() {
+        var userBalance = new UserBalance(1L, new BigDecimal(1000));
         var postBody = new BalancePostRequest();
+        postBody.setId(userBalance.getId());
         postBody.setSum(new BigDecimal(1100));
 
         webTestClient.post()

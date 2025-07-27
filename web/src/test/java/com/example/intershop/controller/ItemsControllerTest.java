@@ -14,6 +14,8 @@ import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -39,6 +41,11 @@ public class ItemsControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private ReactiveClientRegistrationRepository clientRegistrationRepository;
+    @MockitoBean
+    private ReactiveOAuth2AuthorizedClientService authorizedClientService;
 
     @Autowired
     private WebTestClient webTestClient;
@@ -110,7 +117,8 @@ public class ItemsControllerTest {
                 .uri(uriBuilder -> uriBuilder.path("/items/1")
                         .queryParam("action", "PLUS").build()
                 ).exchange()
-                .expectStatus().isForbidden();
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueEquals("Location", "/login");
 
         verify(orderItemService, never()).update(any(), any(), any());
     }
@@ -158,7 +166,8 @@ public class ItemsControllerTest {
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(BodyInserters.fromMultipartData(builder.build()))
                 .exchange()
-                .expectStatus().isForbidden();
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueEquals("Location", "/login");
 
         verify(itemService, never()).insert(any());
     }

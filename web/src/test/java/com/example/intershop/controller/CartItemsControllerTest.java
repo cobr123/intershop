@@ -1,10 +1,12 @@
 package com.example.intershop.controller;
 
 import com.example.intershop.api.DefaultApi;
+import com.example.intershop.client.ApiClient;
 import com.example.intershop.configuration.SecurityConfig;
 import com.example.intershop.domain.BalanceGet200Response;
 import com.example.intershop.domain.BalanceGetRequest;
 import com.example.intershop.model.*;
+import com.example.intershop.service.OAuth2Service;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
 import com.example.intershop.service.UserService;
@@ -15,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
@@ -40,7 +44,16 @@ public class CartItemsControllerTest {
     private UserService userService;
 
     @MockitoBean
-    private DefaultApi api;
+    private DefaultApi defaultApi;
+    @MockitoBean
+    private ApiClient apiClient;
+
+    @MockitoBean
+    private OAuth2Service oAuth2Service;
+    @MockitoBean
+    private ReactiveClientRegistrationRepository clientRegistrationRepository;
+    @MockitoBean
+    private ReactiveOAuth2AuthorizedClientService authorizedClientService;
 
     @Autowired
     private WebTestClient webTestClient;
@@ -50,7 +63,8 @@ public class CartItemsControllerTest {
         Mockito.reset(orderService);
         Mockito.reset(orderItemService);
         Mockito.reset(userService);
-        Mockito.reset(api);
+        Mockito.reset(defaultApi);
+        Mockito.reset(apiClient);
     }
 
     @Test
@@ -69,7 +83,7 @@ public class CartItemsControllerTest {
 
         doReturn(Mono.just(order)).when(orderService).findNewOrder(anyLong());
         doReturn(Flux.just(item)).when(orderItemService).findByOrderId(anyLong());
-        doReturn(Mono.just(ResponseEntity.ok(get200Response))).when(api).balanceGetWithHttpInfo(balanceGetRequest);
+        doReturn(Mono.just(ResponseEntity.ok(get200Response))).when(defaultApi).balanceGetWithHttpInfo(balanceGetRequest);
 
         webTestClient.get().uri("/cart/items").exchange()
                 .expectStatus().is3xxRedirection()
@@ -95,7 +109,12 @@ public class CartItemsControllerTest {
         doReturn(Mono.just(user)).when(userService).findByName(anyString());
         doReturn(Mono.just(order)).when(orderService).findNewOrder(anyLong());
         doReturn(Flux.just(item)).when(orderItemService).findByOrderId(anyLong());
-        doReturn(Mono.just(ResponseEntity.ok(get200Response))).when(api).balanceGetWithHttpInfo(balanceGetRequest);
+        doReturn(Mono.just(ResponseEntity.ok(get200Response))).when(defaultApi).balanceGetWithHttpInfo(balanceGetRequest);
+
+        doReturn(Mono.just("test_token")).when(oAuth2Service).getTokenValue();
+        doReturn(apiClient).when(defaultApi).getApiClient();
+        doReturn(apiClient).when(apiClient).addDefaultHeader(anyString(), anyString());
+        doReturn(Mono.just(ResponseEntity.ok().build())).when(defaultApi).balancePostWithHttpInfo(any());
 
         webTestClient
                 .mutateWith(mockUser(user.getName()))
@@ -122,7 +141,8 @@ public class CartItemsControllerTest {
                 .uri(uriBuilder -> uriBuilder.path("/cart/items/1")
                         .queryParam("action", "Plus").build()
                 ).exchange()
-                .expectStatus().isForbidden();
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueEquals("Location", "/login");
 
         verify(orderItemService, never()).update(anyLong(), anyLong(), any());
     }
@@ -140,6 +160,11 @@ public class CartItemsControllerTest {
         doReturn(Mono.just(user)).when(userService).findByName(anyString());
         doReturn(Mono.just(order)).when(orderService).findNewOrder(anyLong());
         doReturn(Mono.just(item)).when(orderItemService).update(anyLong(), anyLong(), any());
+
+        doReturn(Mono.just("test_token")).when(oAuth2Service).getTokenValue();
+        doReturn(apiClient).when(defaultApi).getApiClient();
+        doReturn(apiClient).when(apiClient).addDefaultHeader(anyString(), anyString());
+        doReturn(Mono.just(ResponseEntity.ok().build())).when(defaultApi).balancePostWithHttpInfo(any());
 
         webTestClient
                 .mutateWith(mockUser(user.getName()))

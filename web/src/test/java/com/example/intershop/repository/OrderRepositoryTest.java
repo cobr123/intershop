@@ -15,9 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import reactor.test.StepVerifier;
+
+import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -35,6 +40,11 @@ public class OrderRepositoryTest {
     @Autowired
     private OrderService orderService;
 
+    @MockitoBean
+    private ReactiveClientRegistrationRepository clientRegistrationRepository;
+    @MockitoBean
+    private ReactiveOAuth2AuthorizedClientService authorizedClientService;
+
     @Autowired
     CacheManager cacheManager;
 
@@ -48,7 +58,7 @@ public class OrderRepositoryTest {
     @Test
     @WithMockUser
     public void testCreate() {
-        userService.insert(new UserUi("name", "")).flatMap(user -> orderService.findNewOrder(user.getId()))
+        userService.insert(new UserUi("name", "", BigDecimal.ONE)).flatMap(user -> orderService.findNewOrder(user.getId()))
                 .as(Transaction::withRollback)
                 .as(StepVerifier::create)
                 .assertNext(order -> {
@@ -63,7 +73,7 @@ public class OrderRepositoryTest {
 
     @Test
     public void testFindByStatus() {
-        userService.insert(new UserUi("name", "")).flatMap(user -> orderService.insert(new Order(user.getId(), OrderStatus.NEW))
+        userService.insert(new UserUi("name", "", BigDecimal.ONE)).flatMap(user -> orderService.insert(new Order(user.getId(), OrderStatus.NEW))
                         .flatMap(order -> orderService.insert(new Order(user.getId(), OrderStatus.GATHERING)).thenReturn(order))
                         .flatMap(order -> orderService.findNewOrder(user.getId()).map(foundOrder -> Pair.of(order, foundOrder))))
                 .as(Transaction::withRollback)
@@ -84,7 +94,7 @@ public class OrderRepositoryTest {
 
     @Test
     public void testDelete() {
-        userService.insert(new UserUi("name", "")).flatMap(user -> orderService.findNewOrder(user.getId()))
+        userService.insert(new UserUi("name", "", BigDecimal.ONE)).flatMap(user -> orderService.findNewOrder(user.getId()))
                 .flatMap(order -> orderService.deleteById(order.getId()).thenReturn(order))
                 .flatMap(order -> orderRepository.existsById(order.getId()))
                 .as(Transaction::withRollback)

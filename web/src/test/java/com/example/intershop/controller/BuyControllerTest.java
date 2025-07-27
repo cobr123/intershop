@@ -1,10 +1,12 @@
 package com.example.intershop.controller;
 
 import com.example.intershop.api.DefaultApi;
+import com.example.intershop.client.ApiClient;
 import com.example.intershop.configuration.SecurityConfig;
 import com.example.intershop.model.Order;
 import com.example.intershop.model.OrderStatus;
 import com.example.intershop.model.UserUi;
+import com.example.intershop.service.OAuth2Service;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
 import com.example.intershop.service.UserService;
@@ -17,6 +19,8 @@ import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
@@ -41,7 +45,16 @@ public class BuyControllerTest {
     private UserService userService;
 
     @MockitoBean
-    private DefaultApi api;
+    private DefaultApi defaultApi;
+    @MockitoBean
+    private ApiClient apiClient;
+
+    @MockitoBean
+    private OAuth2Service oAuth2Service;
+    @MockitoBean
+    private ReactiveClientRegistrationRepository clientRegistrationRepository;
+    @MockitoBean
+    private ReactiveOAuth2AuthorizedClientService authorizedClientService;
 
     @Autowired
     private WebTestClient webTestClient;
@@ -51,7 +64,9 @@ public class BuyControllerTest {
         Mockito.reset(orderService);
         Mockito.reset(orderItemService);
         Mockito.reset(userService);
-        Mockito.reset(api);
+        Mockito.reset(defaultApi);
+        Mockito.reset(apiClient);
+        Mockito.reset(oAuth2Service);
     }
 
     @AfterEach
@@ -70,8 +85,12 @@ public class BuyControllerTest {
         doReturn(Mono.just(user)).when(userService).findByName(anyString());
         doReturn(Mono.just(order)).when(orderService).findNewOrder(anyLong());
         doReturn(Mono.just(BigDecimal.ONE)).when(orderItemService).getTotalSumByOrderId(anyLong());
-        doReturn(Mono.just(ResponseEntity.ok().build())).when(api).balancePostWithHttpInfo(any());
         doReturn(Mono.just(order)).when(orderService).changeNewStatusToGathering(any());
+
+        doReturn(Mono.just("test_token")).when(oAuth2Service).getTokenValue();
+        doReturn(apiClient).when(defaultApi).getApiClient();
+        doReturn(apiClient).when(apiClient).addDefaultHeader(anyString(), anyString());
+        doReturn(Mono.just(ResponseEntity.ok().build())).when(defaultApi).balancePostWithHttpInfo(any());
 
         webTestClient
                 .mutateWith(mockUser(user.getName()))

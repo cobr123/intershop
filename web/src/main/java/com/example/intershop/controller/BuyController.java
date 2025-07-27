@@ -4,6 +4,7 @@ import com.example.intershop.api.DefaultApi;
 import com.example.intershop.domain.BalancePostRequest;
 import com.example.intershop.model.Order;
 import com.example.intershop.model.UserUi;
+import com.example.intershop.service.OAuth2Service;
 import com.example.intershop.service.OrderItemService;
 import com.example.intershop.service.OrderService;
 import com.example.intershop.service.UserService;
@@ -11,10 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
-import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientManager;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,20 +33,20 @@ public class BuyController {
     private final UserService userService;
 
     private final DefaultApi api;
-    private final ReactiveOAuth2AuthorizedClientManager manager;
+    private final OAuth2Service oAuth2Service;
 
     public BuyController(
             OrderService orderService,
             OrderItemService orderItemService,
             UserService userService,
             DefaultApi api,
-            ReactiveOAuth2AuthorizedClientManager manager
+            OAuth2Service oAuth2Service
     ) {
         this.orderService = orderService;
         this.orderItemService = orderItemService;
         this.userService = userService;
         this.api = api;
-        this.manager = manager;
+        this.oAuth2Service = oAuth2Service;
     }
 
     @PostMapping
@@ -68,13 +65,8 @@ public class BuyController {
                     postBody.setId(user.getId());
                     postBody.setSum(sum);
 
-                    return manager.authorize(OAuth2AuthorizeRequest
-                                    .withClientRegistrationId("keycloak-rest-client")
-                                    .principal("system")
-                                    .build()
-                            )
-                            .map(OAuth2AuthorizedClient::getAccessToken)
-                            .map(OAuth2AccessToken::getTokenValue)
+                    return oAuth2Service
+                            .getTokenValue()
                             .flatMap(accessToken -> {
                                 api.getApiClient().addDefaultHeader("Authorization", "Bearer " + accessToken);
                                 return api.balancePostWithHttpInfo(postBody);

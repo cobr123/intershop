@@ -12,10 +12,7 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager;
-import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientManager;
-import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientProviderBuilder;
-import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.*;
 import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler;
@@ -77,4 +74,5 @@ public class SecurityConfig {
 
         return manager;
     }
+
 }

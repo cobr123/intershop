@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.security.Principal;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -61,28 +62,32 @@ public class BuyController {
                     var sum = pair.getT1();
                     Order order = pair.getT2().getT1();
                     UserUi user = pair.getT2().getT2();
-                    var postBody = new BalancePostRequest();
-                    postBody.setId(user.getId());
-                    postBody.setSum(sum);
-
-                    return oAuth2Service
-                            .getTokenValue()
-                            .flatMap(accessToken -> {
-                                api.getApiClient().addDefaultHeader("Authorization", "Bearer " + accessToken);
-                                return api.balancePostWithHttpInfo(postBody);
-                            })
-                            .timeout(Duration.of(5, ChronoUnit.SECONDS))
-                            .flatMap(resp -> {
-                                if (resp.getStatusCode().is2xxSuccessful()) {
-                                    return orderService.changeNewStatusToGathering(order)
-                                            .thenReturn("redirect:/orders/" + order.getId() + "?newOrder=true");
-                                } else {
-                                    log.error("resp = {}", resp);
-                                    return Mono.just("redirect:/cart/items");
-                                }
-                            })
-                            .onErrorReturn("redirect:/cart/items");
+                    return doUpdate(order, user, sum);
                 });
+    }
+
+    private Mono<String> doUpdate(Order order, UserUi user, BigDecimal sum) {
+        var postBody = new BalancePostRequest();
+        postBody.setId(user.getId());
+        postBody.setSum(sum);
+
+        return oAuth2Service
+                .getTokenValue()
+                .flatMap(accessToken -> {
+                    api.getApiClient().addDefaultHeader("Authorization", "Bearer " + accessToken);
+                    return api.balancePostWithHttpInfo(postBody);
+                })
+                .timeout(Duration.of(5, ChronoUnit.SECONDS))
+                .flatMap(resp -> {
+                    if (resp.getStatusCode().is2xxSuccessful()) {
+                        return orderService.changeNewStatusToGathering(order)
+                                .thenReturn("redirect:/orders/" + order.getId() + "?newOrder=true");
+                    } else {
+                        log.error("resp = {}", resp);
+                        return Mono.just("redirect:/cart/items");
+                    }
+                })
+                .onErrorReturn("redirect:/cart/items");
     }
 
 }

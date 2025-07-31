@@ -3,22 +3,18 @@ info:
   title: Rest API платежей
   version: 1.0.0
 paths:
-  /balance:
+  /balance/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
     get:
       summary: Получение баланса на счёте
       security:
         - keycloak_oauth: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                id:
-                  type: integer
-                  format: int64
-              required:
-                - id
       responses:
         '200':
           description: Баланс на счёте
@@ -42,16 +38,12 @@ paths:
             schema:
               type: object
               properties:
-                id:
-                  type: integer
-                  format: int64
                 sum:
                   type: number
                   format: bigdecimal
                   minimum: 0
                   exclusiveMinimum: false
               required:
-                - id
                 - sum
       responses:
         '200':

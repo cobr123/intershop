@@ -19,8 +19,8 @@ public class SecurityConfig {
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/balance").authenticated()
-                        .anyExchange().permitAll()
+                        .pathMatchers("/balance/*").authenticated()
+                        .anyExchange().denyAll()
                 )
                 .oauth2ResourceServer(customizer -> customizer
                         .jwt(jwtCustomizer -> {

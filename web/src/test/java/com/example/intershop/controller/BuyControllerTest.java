@@ -90,7 +90,7 @@ public class BuyControllerTest {
         doReturn(Mono.just("test_token")).when(oAuth2Service).getTokenValue();
         doReturn(apiClient).when(defaultApi).getApiClient();
         doReturn(apiClient).when(apiClient).addDefaultHeader(anyString(), anyString());
-        doReturn(Mono.just(ResponseEntity.ok().build())).when(defaultApi).balancePostWithHttpInfo(any());
+        doReturn(Mono.just(ResponseEntity.ok().build())).when(defaultApi).balanceUserIdPostWithHttpInfo(anyLong(), any());
 
         webTestClient
                 .mutateWith(mockUser(user.getName()))

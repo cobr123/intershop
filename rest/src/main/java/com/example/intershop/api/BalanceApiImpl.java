@@ -1,8 +1,6 @@
 package com.example.intershop.api;
 
-import com.example.intershop.domain.BalanceGetRequest;
-import com.example.intershop.domain.BalanceGet200Response;
-import com.example.intershop.domain.BalancePostRequest;
+import com.example.intershop.domain.*;
 import com.example.intershop.service.UserBalanceService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,12 +18,10 @@ public class BalanceApiImpl implements BalanceApi {
     }
 
     @Override
-    public Mono<ResponseEntity<BalanceGet200Response>> balanceGet(Mono<BalanceGetRequest> balanceGetRequest, ServerWebExchange exchange) {
-        return balanceGetRequest
-                .map(BalanceGetRequest::getId)
-                .flatMap(userBalanceService::findById)
+    public Mono<ResponseEntity<BalanceUserIdGet200Response>> balanceUserIdGet(Long userId, ServerWebExchange exchange) {
+        return userBalanceService.findById(userId)
                 .map(userBalance -> {
-                    var body = new BalanceGet200Response();
+                    var body = new BalanceUserIdGet200Response();
                     body.setBalance(userBalance.getBalance());
                     return ResponseEntity.ok(body);
                 })
@@ -33,9 +29,9 @@ public class BalanceApiImpl implements BalanceApi {
     }
 
     @Override
-    public Mono<ResponseEntity<Void>> balancePost(Mono<BalancePostRequest> balancePostRequest, ServerWebExchange exchange) {
-        return balancePostRequest
-                .flatMap(r -> userBalanceService.findById(r.getId()).zipWith(Mono.just(r)))
+    public Mono<ResponseEntity<Void>> balanceUserIdPost(Long userId, Mono<BalanceUserIdPostRequest> balanceUserIdPostRequest, ServerWebExchange exchange) {
+        return balanceUserIdPostRequest
+                .flatMap(r -> userBalanceService.findById(userId).zipWith(Mono.just(r)))
                 .flatMap(pair -> {
                     var userBalance = pair.getT1();
                     var sumObj = pair.getT2();

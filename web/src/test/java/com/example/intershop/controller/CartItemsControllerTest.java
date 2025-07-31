@@ -3,8 +3,7 @@ package com.example.intershop.controller;
 import com.example.intershop.api.DefaultApi;
 import com.example.intershop.client.ApiClient;
 import com.example.intershop.configuration.SecurityConfig;
-import com.example.intershop.domain.BalanceGet200Response;
-import com.example.intershop.domain.BalanceGetRequest;
+import com.example.intershop.domain.BalanceUserIdGet200Response;
 import com.example.intershop.model.*;
 import com.example.intershop.service.OAuth2Service;
 import com.example.intershop.service.OrderItemService;
@@ -75,15 +74,12 @@ public class CartItemsControllerTest {
 
         var item = new ItemUi(1L, "title1", "description1", "imgPath1", 1, BigDecimal.valueOf(1.1));
 
-        var balanceGetRequest = new BalanceGetRequest();
-        balanceGetRequest.setId(1L);
-
-        var get200Response = new BalanceGet200Response();
+        var get200Response = new BalanceUserIdGet200Response();
         get200Response.setBalance(BigDecimal.ONE);
 
         doReturn(Mono.just(order)).when(orderService).findNewOrder(anyLong());
         doReturn(Flux.just(item)).when(orderItemService).findByOrderId(anyLong());
-        doReturn(Mono.just(ResponseEntity.ok(get200Response))).when(defaultApi).balanceGetWithHttpInfo(balanceGetRequest);
+        doReturn(Mono.just(ResponseEntity.ok(get200Response))).when(defaultApi).balanceUserIdGetWithHttpInfo(1L);
 
         webTestClient.get().uri("/cart/items").exchange()
                 .expectStatus().is3xxRedirection()
@@ -98,10 +94,7 @@ public class CartItemsControllerTest {
 
         var item = new ItemUi(1L, "title1", "description1", "imgPath1", 1, BigDecimal.valueOf(1.1));
 
-        var balanceGetRequest = new BalanceGetRequest();
-        balanceGetRequest.setId(1L);
-
-        var get200Response = new BalanceGet200Response();
+        var get200Response = new BalanceUserIdGet200Response();
         get200Response.setBalance(BigDecimal.ONE);
 
         var user = new UserUi(2L, "userName", "");
@@ -109,12 +102,12 @@ public class CartItemsControllerTest {
         doReturn(Mono.just(user)).when(userService).findByName(anyString());
         doReturn(Mono.just(order)).when(orderService).findNewOrder(anyLong());
         doReturn(Flux.just(item)).when(orderItemService).findByOrderId(anyLong());
-        doReturn(Mono.just(ResponseEntity.ok(get200Response))).when(defaultApi).balanceGetWithHttpInfo(balanceGetRequest);
+        doReturn(Mono.just(ResponseEntity.ok(get200Response))).when(defaultApi).balanceUserIdGetWithHttpInfo(1L);
 
         doReturn(Mono.just("test_token")).when(oAuth2Service).getTokenValue();
         doReturn(apiClient).when(defaultApi).getApiClient();
         doReturn(apiClient).when(apiClient).addDefaultHeader(anyString(), anyString());
-        doReturn(Mono.just(ResponseEntity.ok().build())).when(defaultApi).balancePostWithHttpInfo(any());
+        doReturn(Mono.just(ResponseEntity.ok().build())).when(defaultApi).balanceUserIdGetWithHttpInfo(anyLong());
 
         webTestClient
                 .mutateWith(mockUser(user.getName()))
@@ -164,7 +157,7 @@ public class CartItemsControllerTest {
         doReturn(Mono.just("test_token")).when(oAuth2Service).getTokenValue();
         doReturn(apiClient).when(defaultApi).getApiClient();
         doReturn(apiClient).when(apiClient).addDefaultHeader(anyString(), anyString());
-        doReturn(Mono.just(ResponseEntity.ok().build())).when(defaultApi).balancePostWithHttpInfo(any());
+        doReturn(Mono.just(ResponseEntity.ok().build())).when(defaultApi).balanceUserIdGetWithHttpInfo(anyLong());
 
         webTestClient
                 .mutateWith(mockUser(user.getName()))

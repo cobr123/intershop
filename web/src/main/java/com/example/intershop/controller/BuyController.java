@@ -1,7 +1,7 @@
 package com.example.intershop.controller;
 
 import com.example.intershop.api.DefaultApi;
-import com.example.intershop.domain.BalancePostRequest;
+import com.example.intershop.domain.BalanceUserIdPostRequest;
 import com.example.intershop.model.Order;
 import com.example.intershop.model.UserUi;
 import com.example.intershop.service.OAuth2Service;
@@ -67,15 +67,14 @@ public class BuyController {
     }
 
     private Mono<String> doUpdate(Order order, UserUi user, BigDecimal sum) {
-        var postBody = new BalancePostRequest();
-        postBody.setId(user.getId());
+        var postBody = new BalanceUserIdPostRequest();
         postBody.setSum(sum);
 
         return oAuth2Service
                 .getTokenValue()
                 .flatMap(accessToken -> {
                     api.getApiClient().addDefaultHeader("Authorization", "Bearer " + accessToken);
-                    return api.balancePostWithHttpInfo(postBody);
+                    return api.balanceUserIdPostWithHttpInfo(user.getId(), postBody);
                 })
                 .timeout(Duration.of(5, ChronoUnit.SECONDS))
                 .flatMap(resp -> {

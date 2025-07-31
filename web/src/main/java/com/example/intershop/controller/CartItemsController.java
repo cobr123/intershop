@@ -1,7 +1,6 @@
 package com.example.intershop.controller;
 
 import com.example.intershop.api.DefaultApi;
-import com.example.intershop.domain.BalanceGetRequest;
 import com.example.intershop.model.*;
 import com.example.intershop.service.OAuth2Service;
 import com.example.intershop.service.OrderItemService;
@@ -64,10 +63,9 @@ public class CartItemsController {
                 .flatMap(pair -> oAuth2Service
                         .getTokenValue()
                         .flatMap(accessToken -> {
-                            var balanceGetRequest = new BalanceGetRequest();
-                            balanceGetRequest.setId(pair.getFirst().getT2().getId());
+                            UserUi user = pair.getFirst().getT2();
                             api.getApiClient().addDefaultHeader("Authorization", "Bearer " + accessToken);
-                            return api.balanceGetWithHttpInfo(balanceGetRequest).timeout(Duration.of(5, ChronoUnit.SECONDS));
+                            return api.balanceUserIdGetWithHttpInfo(user.getId()).timeout(Duration.of(5, ChronoUnit.SECONDS));
                         })
                         .map(resp -> {
                             if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
